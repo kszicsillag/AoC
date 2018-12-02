@@ -20,5 +20,8 @@ namespace AoC2018
                 index = (index + 1) % count;
             }
         }
+
+
+
     }
 }
