@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace AoC2018
 {
@@ -12,9 +14,55 @@ namespace AoC2018
         {
             //Console.WriteLine($"1a:{Day1a}");
             //Console.WriteLine($"1b:{Day1b}");
-            Console.WriteLine($"2a:{Day2a}");
-            Console.WriteLine($"2b:{Day2b}");
+            //Console.WriteLine($"2a:{Day2a}");
+            //Console.WriteLine($"2b:{Day2b}");
+            //Console.WriteLine($"3a:{Day3a}");
+            Console.WriteLine($"3b:{Day3b}");
+
+
             Console.ReadLine();
+        }
+
+
+        public static int Day3a
+        {
+            get
+            {
+                var rects = File.ReadLines("input3.txt")
+                    .Select(l =>
+                        l.Replace(" ", string.Empty)
+                            .Split(new[] {'#', '@', ':', ',', 'x'}, StringSplitOptions.RemoveEmptyEntries))
+                    .Select(lp=>lp.Select(int.Parse).ToArray())
+                    .Select(lp => new {ID = lp[0], R=new Rectangle(lp[1],lp[2],lp[3],lp[4])})
+                    .ToArray();
+                 
+                /**/
+                int numofpixels = (from x in Enumerable.Range(0, 1000)
+                    from y in Enumerable.Range(0, 1000)
+                    from r in rects
+                    where r.R.Contains(x, y)
+                    group r by new {x, y} into g
+                    select g).Count(g=>g.Count() > 1);
+
+                return numofpixels;
+            }
+        }
+
+        public static int Day3b
+        {
+            get
+            {
+                var rects = File.ReadLines("input3.txt")
+                    .Select(l =>
+                        l.Replace(" ", string.Empty)
+                            .Split(new[] { '#', '@', ':', ',', 'x' }, StringSplitOptions.RemoveEmptyEntries))
+                    .Select(lp => lp.Select(int.Parse).ToArray())
+                    .Select(lp => new { ID = lp[0], R = new Rectangle(lp[1], lp[2], lp[3], lp[4]) })
+                    .ToArray();
+
+                var island=rects.First(r => !rects.Any(r2 => r2.R.IntersectsWith(r.R) && r2.ID != r.ID));                                              
+                return island.ID;
+            }
         }
 
         public static int Day2a
