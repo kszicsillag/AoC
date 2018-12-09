@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
@@ -17,12 +19,141 @@ namespace AoC2018
             //Console.WriteLine($"2a:{Day2a}");
             //Console.WriteLine($"2b:{Day2b}");
             //Console.WriteLine($"3a:{Day3a}");
-            Console.WriteLine($"3b:{Day3b}");
+            //Console.WriteLine($"3b:{Day3b}");
+            Console.WriteLine($"4a:{Day4a}");
+            Console.WriteLine($"4a:{Day4b}");
+            
 
-
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
+        
+        public static int Day4b
+        {
+            get
+            {
+                const string guardkey = "Guard";
+                const string sleepkey = "falls asleep";
+                const string awakekey = "wakes up";
+                string[] keys= new []{guardkey,sleepkey,awakekey};
+                
+                var source = File.ReadLines("input4.txt")
+                    .OrderBy(l=>DateTime.Parse(l.Substring(1,16)))                   
+                    .ToObservable();
+                                                                                
+                var sharedSource = source.Buffer(2,1).Publish().RefCount();
+                var closingSignal = sharedSource
+                    .Where(x => x.Last().Contains(guardkey));                                               
+
+                var rx = sharedSource.Select(l=>l.First())
+                    .Window(() => closingSignal)
+                    .Select(o => o.Aggregate
+                    (
+                        new {gid=string.Empty, sleepmins = new int[60], timestamp = default(DateTime)},
+                        (acc, l) =>
+                        {
+                            string key = keys.FirstOrDefault(l.Contains);
+                            DateTime ts = DateTime.Parse(l.Substring(1, 16));
+                            switch (key)
+                            {
+                                case guardkey:
+                                {
+                                    string gid_parsed= l.Split(' ').First(s => s.StartsWith('#'));
+                                    return new {gid = gid_parsed, acc.sleepmins, timestamp = ts};
+                                }
+                                case sleepkey:
+                                    return new {acc.gid, acc.sleepmins, timestamp = ts};
+                                case awakekey:
+                                    for (int i = acc.timestamp.Minute; i < ts.Minute; i++)
+                                    {
+                                        acc.sleepmins[i] = 1;
+                                    }                                            
+                                    return new{acc.gid, acc.sleepmins, timestamp = ts};
+                            }
+                            return null;
+                        }
+                    ))
+                    .Switch();
+                                
+                var sleepiest=
+                    rx.ToEnumerable()
+                      .GroupBy(x => x.gid)
+                      .Select(g=>new {g.Key, sleepmins=g.Aggregate(new int[60].AsEnumerable(), (acc, sm) => acc.Zip(sm.sleepmins, (x, y) => x + y))})
+                      .MaxBy(x=>x.sleepmins.Max())
+                      .First()
+                    ;
+
+                int gid = int.Parse(sleepiest.Key.TrimStart('#'));
+                int  sleepiestMin=sleepiest.sleepmins
+                    .Select((m,i)=>new {m, i})
+                    .MaxBy(x=>x.m)
+                    .First().i;
+                return gid*sleepiestMin;
+            }
+        }
+
+        public static int Day4a
+        {
+            get
+            {
+                const string guardkey = "Guard";
+                const string sleepkey = "falls asleep";
+                const string awakekey = "wakes up";
+                string[] keys= new []{guardkey,sleepkey,awakekey};
+                
+                var source = File.ReadLines("input4.txt")
+                    .OrderBy(l=>DateTime.Parse(l.Substring(1,16)))                   
+                    .ToObservable();
+                                                                                
+                var sharedSource = source.Buffer(2,1).Publish().RefCount();
+                var closingSignal = sharedSource
+                    .Where(x => x.Last().Contains(guardkey));                                               
+
+                var rx = sharedSource.Select(l=>l.First())
+                    .Window(() => closingSignal)
+                    .Select(o => o.Aggregate
+                    (
+                        new {gid=string.Empty, sleepmins = new int[60], timestamp = default(DateTime)},
+                        (acc, l) =>
+                        {
+                            string key = keys.FirstOrDefault(l.Contains);
+                            DateTime ts = DateTime.Parse(l.Substring(1, 16));
+                            switch (key)
+                            {
+                                case guardkey:
+                                {
+                                    string gid_parsed= l.Split(' ').First(s => s.StartsWith('#'));
+                                    return new {gid = gid_parsed, acc.sleepmins, timestamp = ts};
+                                }
+                                case sleepkey:
+                                    return new {acc.gid, acc.sleepmins, timestamp = ts};
+                                case awakekey:
+                                    for (int i = acc.timestamp.Minute; i < ts.Minute; i++)
+                                    {
+                                        acc.sleepmins[i] = 1;
+                                    }                                            
+                                    return new{acc.gid, acc.sleepmins, timestamp = ts};
+                            }
+                            return null;
+                        }
+                    ))
+                    .Switch();
+                                
+                var sleepiest=
+                    rx.ToEnumerable()
+                      .GroupBy(x => x.gid)
+                      .MaxBy(g => g.SelectMany(gg => gg.sleepmins).Sum())
+                      .First();
+
+                int gid = int.Parse(sleepiest.Key.TrimStart('#'));
+                int  sleepiestMin=sleepiest
+                    .Aggregate(new int[60].AsEnumerable(), (acc, sm) => acc.Zip(sm.sleepmins, (x, y) => x + y))
+                    .Select((m,i)=>new {m, i})
+                    .MaxBy(x=>x.m)
+                    .First().i;
+                return gid*sleepiestMin;
+            }
+        }
 
         public static int Day3a
         {
