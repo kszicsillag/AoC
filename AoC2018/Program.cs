@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AoC2018
@@ -20,13 +21,96 @@ namespace AoC2018
             //Console.WriteLine($"2b:{Day2b}");
             //Console.WriteLine($"3a:{Day3a}");
             //Console.WriteLine($"3b:{Day3b}");
-            Console.WriteLine($"4a:{Day4a}");
-            Console.WriteLine($"4a:{Day4b}");
-            
+            //Console.WriteLine($"4a:{Day4a}");
+            //Console.WriteLine($"4b:{Day4b}");
+            Console.WriteLine($"5a:{Day5a}");
+            Console.WriteLine($"5b:{Day5b}");
 
             //Console.ReadLine();
         }
+        
+        
+        public static int Day5b
+        {
+            get
+            {
+                const char nullchar = '0';
+                string poly = File.ReadAllText("input5.txt").Trim();
+                var dchars = poly.ToLower().Distinct();                
+                int minLReduced=poly.Length;                                  
+                foreach(char remchar in dchars)
+                {
+                    StringBuilder sb= new StringBuilder(poly);
+                    sb.Replace(remchar, nullchar);
+                    sb.Replace(char.ToUpper(remchar), nullchar);
+                    bool replaced;
+                    do
+                    {
+                        replaced = false;
+                        int? ci = null;
+                        for (int i = 0; i < sb.Length; i++)
+                        {
+                            if (sb[i] == nullchar) continue;
+                            if (!ci.HasValue)
+                                ci = i;
+                            else
+                            {
+                                char c1 = sb[ci.Value];
+                                char c2 = sb[i];
+                                if (char.IsLower(c1) != char.IsLower(c2) && char.ToLower(c1) == char.ToLower(c2))
+                                {
+                                    sb[ci.Value] = sb[i] = nullchar;
+                                    replaced = true;
+                                    ci = null;
 
+                                }
+                                else ci = i;
+                            }
+                        }
+                    } while (replaced);
+                    int lreduced = sb.ToString().Count(c => c != nullchar);
+                    minLReduced = Math.Min(lreduced, minLReduced);
+                }
+                return minLReduced;
+            }
+        }
+
+        
+        public static int Day5a
+        {
+            get
+            {
+                const char nullchar = '0';
+                string poly = File.ReadAllText("input5.txt").Trim();             
+                StringBuilder sb= new StringBuilder(poly);
+                bool replaced;
+                do
+                {
+                    replaced = false;
+                    int? ci = null;
+                    for (int i = 0; i < sb.Length; i++)
+                    {
+                        if (sb[i] == nullchar) continue;
+                        if (!ci.HasValue)
+                            ci = i;
+                        else
+                        {
+                            char c1 = sb[ci.Value];
+                            char c2 = sb[i];
+                            if (char.IsLower(c1) != char.IsLower(c2) && char.ToLower(c1) == char.ToLower(c2))
+                            {
+                                sb[ci.Value] = sb[i] = nullchar;
+                                replaced = true;
+                                ci = null;
+
+                            }
+                            else ci = i;
+                        }
+                    }                    
+                } while (replaced);
+                return sb.ToString().Count(c=>c!=nullchar);
+            }
+        }
         
         public static int Day4b
         {
