@@ -23,13 +23,266 @@ namespace AoC2018
             //Console.WriteLine($"3b:{Day3b}");
             //Console.WriteLine($"4a:{Day4a}");
             //Console.WriteLine($"4b:{Day4b}");
-            Console.WriteLine($"5a:{Day5a}");
-            Console.WriteLine($"5b:{Day5b}");
-
-            //Console.ReadLine();
+            //Console.WriteLine($"5a:{Day5a}");
+            //Console.WriteLine($"5b:{Day5b}");
+            //Console.WriteLine($"6a:{Day6a}");
+            //Console.WriteLine($"6b:{Day6b}");
+            //Console.WriteLine($"7a:{Day7a}");
+            //Console.WriteLine($"7b:{Day7b}");
+            //Console.WriteLine($"8a:{Day8a}");
+            Console.WriteLine($"8a:{Day8b}");
+            Console.ReadLine();
         }
-        
-        
+
+        public static long Day8b
+        {
+            get
+            {
+                int[] steps = File.ReadAllText("input8.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.Parse(s))
+                    .ToArray();
+                Span<int> mem = steps.AsSpan();
+                var stepsIndexed = steps
+                     .Select((x, i) => new { val = x, idx = i });
+                Dictionary<int, List<int>> childSums = new Dictionary<int, List<int>>();
+                List<int> childSumList;
+                int mysum;
+                do
+                {
+                    var zeroeridx = stepsIndexed.Where(x => x.val != -1)
+                        .Select((x, i) => new { x, fidx = i })
+                        .First(xx => xx.fidx % 2 == 0 && xx.x.val == 0).x.idx;
+                    var nextleafidx = stepsIndexed.Skip(zeroeridx + 2).First(x => x.val != -1).idx;                    
+                    mysum = (!childSums.TryGetValue(zeroeridx, out childSumList)) ?
+                        mem.Slice(nextleafidx, steps[zeroeridx + 1]).ToArray().Sum():
+                        mem.Slice(nextleafidx, steps[zeroeridx + 1]).ToArray()
+                            .Select(i => i > childSumList.Count ? 0 : childSumList[i - 1]).Sum();
+
+                    mem.Slice(nextleafidx, steps[zeroeridx + 1]).Fill(-1);
+                    mem.Slice(zeroeridx, 2).Fill(-1);
+                    if (!steps.Any(x => x != -1))
+                       break;
+                    int notzerolastidx = stepsIndexed.Take(zeroeridx).Last(i => i.val != -1).idx - 1;
+                    steps[notzerolastidx]--;
+                    if (!childSums.TryGetValue(notzerolastidx, out childSumList))
+                        childSums.Add(notzerolastidx, new List<int> { mysum});
+                    else
+                        childSumList.Add(mysum);
+
+                } while (steps.Any(x => x != -1));
+
+                return mysum;
+            }
+        }
+
+        public static long Day8a
+        {
+            get
+            {
+                int[] steps = File.ReadAllText("input8.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.Parse(s))                    
+                    .ToArray();
+                Span<int> mem = steps.AsSpan();
+                var stepsIndexed = steps
+                     .Select((x,i) => new {val=x, idx=i });
+                long sum = 0;
+                do
+                {
+                    var zeroeridx = stepsIndexed.Where(x=>x.val != -1)
+                        .Select((x,i)=>new { x, fidx=i })
+                        .First(xx => xx.fidx % 2 == 0 && xx.x.val == 0).x.idx;
+                    var nextleafidx = stepsIndexed.Skip(zeroeridx + 2).First(x => x.val != -1).idx;
+                    sum += mem.Slice(nextleafidx, steps[zeroeridx + 1]).ToArray().Sum();
+                    mem.Slice(nextleafidx, steps[zeroeridx + 1]).Fill(-1);
+                    mem.Slice(zeroeridx, 2).Fill(-1);
+                    if (!steps.Any(x => x != -1))
+                        break;
+                    int notzerolastidx = stepsIndexed.Take(zeroeridx).Last(i => i.val != -1).idx - 1;
+                    steps[notzerolastidx]--;
+                } while (steps.Any(x=>x!=-1));
+
+                return sum;
+            }
+        }
+
+
+        public static int Day7b
+        {
+            get
+            {
+                var steps = File.ReadAllLines("input7.txt")
+                    .Select(l => l.Split(" ", StringSplitOptions.RemoveEmptyEntries).Where(s => s.Length == 1).ToArray())
+                    .Select(ls => new { Step = ls[1][0], Pre = ls[0][0] });
+
+                var tasks = steps.SelectMany(s => new[] { s.Pre, s.Step }).Distinct()
+                    .Select(s => new Day7DO { Task=s, Goal= s - 'A' + 61})
+                    .ToArray();
+
+                var rules= steps
+                    .GroupBy(x => x.Step)
+                    .ToDictionary(g => g.Key, g => g.Select(x => x.Pre).ToList());
+
+               
+                var nopre = rules.SelectMany(kvp => kvp.Value).Distinct()
+                                        .Except(rules.Select(kvp2 => kvp2.Key))
+                                        .OrderBy(c => c);
+
+                //var xx=tasks.Where(t => nopre.Contains(t.task)).ToArray();
+                tasks.Where(t => nopre.Contains(t.Task)).ForEach(t => t.State=1);
+                tasks.Where(t => t.State == 1).OrderBy(t=>t.Task).Take(5).ForEach(t => t.State=2);
+
+                int elapsed = 0;
+                do
+                {
+                    elapsed++;
+                    //working
+                    tasks.Where(t => t.State == 2).ForEach(t => t.Worked++);
+                    //set completed
+                    tasks.Where(t => t.State == 2 && t.Worked==t.Goal).ForEach(t => t.State=3);
+                    //set avail
+                    var completed= tasks.Where(t => t.State == 3).Select(t=>t.Task).ToArray();
+                    tasks.Where(t => t.State == 0 && !rules[t.Task].Except(completed).Any()).ForEach(t => t.State = 1);
+                    //start new work
+                    var freeworkers = 5 - tasks.Count(t => t.State == 2);
+                    tasks.Where(t => t.State == 1).OrderBy(t => t.Task).Take(freeworkers).ForEach(t => t.State = 2);
+
+                } while (tasks.Any(t=>t.State != 3));
+
+
+                return elapsed;
+            }
+        }
+
+
+
+        public static string Day7a
+        {
+            get
+            {
+              
+
+                var steps = File.ReadAllLines("input7.txt")
+                    .Select(l => l.Split(" ", StringSplitOptions.RemoveEmptyEntries).Where(s=>s.Length==1).ToArray())
+                    .Select(ls => new {Step=ls[1][0], Pre=ls[0][0]  })
+                    .GroupBy (x=> x.Step)
+                    .ToDictionary(g=>g.Key, g=>g.Select(x=>x.Pre).ToList());
+                
+                List<char> avails = new List<char>();
+                var nopre=steps.SelectMany(kvp => kvp.Value).Distinct()
+                                        .Except(steps.Select(kvp2 => kvp2.Key))
+                                        .OrderBy(c=>c)
+                                        .ToArray();
+                char newlydone=nopre[0];
+                List<char> orderedsteps = new List<char> { newlydone };
+                avails.AddRange(nopre.Skip(1));
+                do
+                {                    
+                    steps.ForEach(kvp=>kvp.Value.Remove(newlydone));
+                    var canstarts=steps.Where(kvp => !kvp.Value.Any()).Select(kvp=>kvp.Key).ToArray();
+                    canstarts.ForEach(s => steps.Remove(s));
+                    avails.AddRange(canstarts);
+                    newlydone = avails.OrderBy(c => c)
+                                        .First();
+                    orderedsteps.Add(newlydone);
+                    avails.Remove(newlydone);
+
+                } while (steps.Count > 0);
+                
+
+                return new string(orderedsteps.ToArray());
+            }
+        }
+
+        public static int Day6b
+        {
+            get
+            {
+                Point[] points = File.ReadAllLines("input6.txt").Select(l => l.Split(", ", StringSplitOptions.RemoveEmptyEntries))
+                    .Select(ls => new Point(int.Parse(ls[0]), int.Parse(ls[1])))
+                    .ToArray();
+                Point centroid = new Point((int)points.Average(p => p.X), (int)points.Average(p => p.Y));
+                Point[] neighbourOffsets = Enumerable.Range(-1, 3)
+                                                .SelectMany(p => Enumerable.Range(-1, 3), (x, y) => new Point(x, y))
+                                                .Where(p => p.X != 0 || p.Y != 0)
+                                                .ToArray();
+                HashSet<Point> pointsVisited = new HashSet<Point> { centroid };
+                int numofNewGoodPoints;
+                int goodPoints=1;
+                do
+                {
+                    var pDists = pointsVisited.SelectMany(p => neighbourOffsets, (p, n) => new Point(p.X + n.X, p.Y + n.Y))
+                        .Where(po => !pointsVisited.Contains(po))
+                        .Distinct()
+                        .Select(po => new
+                            {
+                                po,
+                                distsum = points.Sum(p => Math.Abs(p.X - po.X) + Math.Abs(p.Y - po.Y))                                      
+                            })
+                         .ToArray();
+                    pDists.Select(x => x.po).ForEach(x => pointsVisited.Add(x));
+                    numofNewGoodPoints=pDists.Count(x => x.distsum < 10000);
+                    goodPoints += numofNewGoodPoints;
+                        
+                } while (numofNewGoodPoints > 0);
+
+                return goodPoints;
+            }
+        }
+
+        public static int Day6a
+        {
+            get
+            {
+                Point[] points=File.ReadAllLines("input6.txt").Select(l => l.Split(", ", StringSplitOptions.RemoveEmptyEntries))
+                    .Select(ls => new Point(int.Parse(ls[0]), int.Parse(ls[1])))
+                    .ToArray();
+                var orderX = points.OrderBy(p => p.X);
+                var orderY = points.OrderBy(p => p.Y);
+                Point loc = new Point(orderX.First().X, orderY.First().Y);
+                Point far = new Point(orderX.Last().X, orderY.Last().Y);
+                Rectangle r = new Rectangle(loc.X, loc.Y, far.X - loc.X, far.Y - loc.Y);
+                Dictionary<Point, int?> areas = points.ToDictionary(p=>p, p=>(int?)1);
+                Point[] neighbourOffsets = Enumerable.Range(-1, 3)
+                                                .SelectMany(p => Enumerable.Range(-1, 3), (x, y) => new Point(x, y))
+                                                .Where(p=>p.X!=0 || p.Y!=0)
+                                                .ToArray();
+                HashSet<Point> pointsVisited = new HashSet<Point>(points);
+                
+                bool added;
+                do
+                {                   
+                    var pDists = pointsVisited.SelectMany(p => neighbourOffsets, (p, n) => new Point(p.X + n.X, p.Y + n.Y))
+                        .Where(po => !pointsVisited.Contains(po) && r.Contains(po))
+                        .Distinct()
+                        .Select(po => new
+                        {
+                            po,
+                            onedge= po.X == loc.X || po.X ==far.X || po.Y==loc.Y || po.Y== far.Y,
+                            dists = points.Select(p => new { p, md = Math.Abs(p.X - po.X) + Math.Abs(p.Y - po.Y) })
+                                      .OrderBy(x => x.md)
+                                      .Take(2)
+                                      .ToArray()
+                        })
+                       .Select(x=> new {x.po, x.onedge, nearest= x.dists[0].md != x.dists[1].md ? x.dists[0].p : (Point?)null })
+                       .ToArray();
+                    pDists.Where(x=>x.nearest.HasValue).ToList().ForEach(
+                                x => 
+                                {
+                                    if(areas[x.nearest.Value].HasValue)
+                                    {
+                                        areas[x.nearest.Value] = x.onedge ? null : areas[x.nearest.Value]+1;
+                                    }
+                                }                                    
+                             );
+                    pDists.Select(x => x.po).ForEach(x=>pointsVisited.Add(x));
+                    added = pDists.Any();
+                } while (added);
+
+                int maxArea = areas.Max(kvp => kvp.Value).Value;
+                return maxArea;
+            }
+        }
+
         public static int Day5b
         {
             get
