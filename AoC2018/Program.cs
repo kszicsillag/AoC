@@ -30,8 +30,99 @@ namespace AoC2018
             //Console.WriteLine($"7a:{Day7a}");
             //Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
-            Console.WriteLine($"8a:{Day8b}");
+            //Console.WriteLine($"8b:{Day8b}");
+            Console.WriteLine($"9a:{Day9a}");
+            Console.WriteLine($"9b:{Day9b}");
             Console.ReadLine();
+        }
+
+
+        public static long Day9b
+        {
+            get
+            {
+                int[] intData = File.ReadAllText("input9.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.TryParse(s, out int ires) ? ires : (int?)null)
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value)
+                    .Take(2)
+                    .ToArray();
+                int playerNum = intData[0];
+                int maxMarbleNum = intData[1] * 100;
+                int playingMarble = 0;
+                int curridx = 0;
+                Dictionary<int, long> scores = new Dictionary<int, long>();
+                List<int> marbles = new List<int>(maxMarbleNum) { playingMarble };
+                do
+                {
+                    playingMarble++;
+                    if (playingMarble % 23 == 0)
+                    {
+                        curridx -= 7;
+                        if (curridx < 0)
+                            curridx += marbles.Count;
+                        int playerid = playingMarble % playerNum;
+                        if (!scores.ContainsKey(playerid))
+                            scores.Add(playerid, 0);
+                        scores[playerid] += (playingMarble + marbles[curridx]);
+                        marbles.RemoveAt(curridx);
+                    }
+                    else
+                    {
+                        curridx = ((curridx + 1) % marbles.Count) + 1;
+                        marbles.Insert(curridx, playingMarble);
+                    }
+
+                } while (playingMarble < maxMarbleNum);
+
+                long max = scores.Max(kvp => kvp.Value);
+                return max;
+
+            }
+        }
+
+        public static long Day9a
+        {
+            get
+            {
+                int[] intData = File.ReadAllText("input9.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s=>int.TryParse(s, out int ires) ? ires: (int?)null)
+                    .Where(x=>x.HasValue)
+                    .Select(x=>x.Value)
+                    .Take(2)
+                    .ToArray();
+                int playerNum = intData[0];
+                int maxMarbleNum = intData[1];
+                int playingMarble = 0;
+                int curridx = 0;
+                Dictionary<int, long> scores= new Dictionary<int, long>();
+                List<int> marbles = new List<int>(maxMarbleNum) { playingMarble};
+                do
+                {
+                    playingMarble++;
+                    if (playingMarble % 23 == 0)
+                    {
+                        curridx -= 7;
+                        if (curridx < 0)
+                            curridx += marbles.Count;
+                        int playerid = playingMarble % playerNum;
+                        if (!scores.ContainsKey(playerid))
+                            scores.Add(playerid, 0);
+                        scores[playerid] +=(playingMarble + marbles[curridx]);
+                        marbles.RemoveAt(curridx);
+                    }
+                    else
+                    {
+                        curridx = ((curridx + 1) % marbles.Count) + 1;
+                        marbles.Insert(curridx, playingMarble);
+                    }
+
+                } while (playingMarble < maxMarbleNum);
+
+                long max = scores.Max(kvp => kvp.Value);
+                return max;
+               
+            }
         }
 
         public static long Day8b
@@ -79,27 +170,27 @@ namespace AoC2018
         {
             get
             {
-                int[] steps = File.ReadAllText("input8.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
+                int[] digits = File.ReadAllText("input8.txt").Split(" ", StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => int.Parse(s))                    
                     .ToArray();
-                Span<int> mem = steps.AsSpan();
-                var stepsIndexed = steps
+                Span<int> mem = digits.AsSpan();
+                var digitsIndexed = digits
                      .Select((x,i) => new {val=x, idx=i });
                 long sum = 0;
                 do
                 {
-                    var zeroeridx = stepsIndexed.Where(x=>x.val != -1)
+                    var zeroeridx = digitsIndexed.Where(x=>x.val != -1)
                         .Select((x,i)=>new { x, fidx=i })
                         .First(xx => xx.fidx % 2 == 0 && xx.x.val == 0).x.idx;
-                    var nextleafidx = stepsIndexed.Skip(zeroeridx + 2).First(x => x.val != -1).idx;
-                    sum += mem.Slice(nextleafidx, steps[zeroeridx + 1]).ToArray().Sum();
-                    mem.Slice(nextleafidx, steps[zeroeridx + 1]).Fill(-1);
+                    var nextleafidx = digitsIndexed.Skip(zeroeridx + 2).First(x => x.val != -1).idx;
+                    sum += mem.Slice(nextleafidx, digits[zeroeridx + 1]).ToArray().Sum();
+                    mem.Slice(nextleafidx, digits[zeroeridx + 1]).Fill(-1);
                     mem.Slice(zeroeridx, 2).Fill(-1);
-                    if (!steps.Any(x => x != -1))
+                    if (!digits.Any(x => x != -1))
                         break;
-                    int notzerolastidx = stepsIndexed.Take(zeroeridx).Last(i => i.val != -1).idx - 1;
-                    steps[notzerolastidx]--;
-                } while (steps.Any(x=>x!=-1));
+                    int notzerolastidx = digitsIndexed.Take(zeroeridx).Last(i => i.val != -1).idx - 1;
+                    digits[notzerolastidx]--;
+                } while (digits.Any(x=>x!=-1));
 
                 return sum;
             }
