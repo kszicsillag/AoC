@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Xml.Schema;
+using ImageMagick;
 
 namespace AoC2018
 {
@@ -31,11 +35,172 @@ namespace AoC2018
             //Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
             //Console.WriteLine($"8b:{Day8b}");
-            Console.WriteLine($"9a:{Day9a}");
-            Console.WriteLine($"9b:{Day9b}");
+            //Console.WriteLine($"9a:{Day9a}");
+            //Console.WriteLine($"9b:{Day9b}");
+            //Console.WriteLine($"10:{Day10}");
+            Console.WriteLine($"11:{Day11a}");
+            Console.WriteLine($"11:{Day11b}");
             Console.ReadLine();
         }
 
+
+        public static Rectangle Day11b
+        {
+            get
+            {
+                int serial = 8199;
+                int?[,,] matrix = new int?[300, 300, 300];
+                int maxAxA = 0;
+                Rectangle maxAxAp = new Rectangle();                
+                for (int a = 1; a < 300; a++)
+                {
+                    int smallestFacor= a<= 2 ? default:Enumerable.Range(2, a/2).FirstOrDefault(xx => a % xx == 0);
+                    int[] divs=null;
+                    int? largestDiv = null;
+                    if (smallestFacor != default)
+                    {
+                        largestDiv = a / smallestFacor;
+                        divs = Enumerable.Range(0, smallestFacor)
+                            .Select(x => x * largestDiv.Value).ToArray();
+                    }
+
+                    for (int x = 0; x < 300 - a; x++)
+                    {
+                        for (int y = 0; y < 300 - a; y++)
+                        {
+                            int p3x3;                           
+                            if (a==1)
+                            {
+                                p3x3 = (((x + 10) * y + serial) * (x + 10))
+                                                             .Digits()
+                                                             .ElementAt(2) - 5;                                
+                            }
+                            else if (divs!=null)
+                            {                                
+                                p3x3 = divs
+                                    .SelectMany(xx => divs, (xx, yy) => (xx, yy))
+                                    .Sum(koord => matrix[koord.xx+x, koord.yy+y, largestDiv.Value].Value);                                
+                            }
+                            else
+                            {
+                                var largestSubA = Enumerable.Range(1, a).Reverse().First(xa => matrix[x, y, xa].HasValue);
+                                p3x3 =
+                                    matrix[x, y, largestSubA].Value+
+                                    Enumerable.Range(x , a)
+                                        .SelectMany(xx => Enumerable.Range(y + largestSubA, a - largestSubA), (xx, yy) => (xx, yy))
+                                        .Sum(koord => matrix[koord.xx, koord.yy, 1].Value) +
+                                    Enumerable.Range(x + largestSubA, a - largestSubA)
+                                        .SelectMany(xx => Enumerable.Range(y, a), (xx, yy) => (xx, yy))
+                                        .Sum(koord => matrix[koord.xx, koord.yy, 1].Value) -
+                                    Enumerable.Range(x+largestSubA, a-largestSubA)
+                                    .SelectMany(xx => Enumerable.Range(y+largestSubA, a - largestSubA), (xx, yy) => (xx, yy))
+                                    .Sum(koord => matrix[koord.xx, koord.yy, 1].Value);
+                               
+                            }
+                            matrix[x, y, a] = p3x3;
+                            if (p3x3 > maxAxA)
+                            {
+                                maxAxA = p3x3;
+                                maxAxAp.X = x;
+                                maxAxAp.Y = y;
+                                maxAxAp.Width = a;
+                            }
+                        }
+                    } 
+                }
+
+                return maxAxAp;
+            }
+        }
+
+
+        public static Point Day11a
+        {
+            get
+            {
+                int serial = 8199;
+                int?[,] matrix = new int?[300,300];
+                int maxAxA = 0;
+                Point maxAxAp= new Point();
+                int a = 3;
+                for (int x = 0; x < 300-a; x++)
+                {
+                    for (int y = 0; y < 300-a; y++)
+                    {
+                        int p3x3=Enumerable.Range(x, a).SelectMany(xx => Enumerable.Range(y, a), (xx, yy) => (xx, yy))
+                            .Do
+                            (
+                                koord =>
+                                {
+                                    if (!matrix[koord.xx, koord.yy].HasValue)
+                                    {
+                                        matrix[koord.xx, koord.yy] =  (((koord.xx + 10) * koord.yy + serial) * (koord.xx + 10))
+                                                 .Digits()
+                                                 .ElementAt(2)-5;
+                                    }
+                                }
+                            )
+                            .Sum(koord=> matrix[koord.xx, koord.yy].Value);
+                        if (p3x3 > maxAxA)
+                        {
+                            maxAxA = p3x3;
+                            maxAxAp.X= x;
+                            maxAxAp.Y = y;
+                        }
+                    }
+                }
+
+                return maxAxAp;
+            }
+        }
+
+
+        public static string Day10
+        {
+            get
+            {
+                var rawrows = File.ReadAllLines("input10.txt")
+                    .Select(s => s.Split(new []{" ",", ","<",">"}, StringSplitOptions.RemoveEmptyEntries));
+                var sky = rawrows.Select(ss => ss.Select(s => int.TryParse(s, out int ires) ? ires : (int?) null))
+                    .Select(ss => ss.Where(s => s.HasValue).Select(s => s.Value).ToArray())
+                    .Select(ss => new Day10DO(new Day10Point(ss[0], ss[1]), new Point(ss[2], ss[3])))
+                    .ToArray();
+                int shiftCount=0;              
+                do
+                {
+                    sky.ForEach(s=>s.Shift());
+                    shiftCount++;
+
+                } while (sky.Max(p => p.Loc.Y) - sky.Min(p => p.Loc.Y) > sky.Length);
+                Point initOffset= new Point(-sky.Min(s => s.Loc.X),-sky.Min(s => s.Loc.Y));
+                sky.ForEach(s => s.Loc.Offset(initOffset));               
+
+                Point dims= new Point(sky.Max(p => p.Loc.X) + 2, sky.Max(p => p.Loc.Y) + 2);
+                string filename = "aoc2018d10.gif";
+                using (MagickImageCollection collection = new MagickImageCollection())
+                {
+                    for (int i = 0; i < 100; i++)
+                    {
+                        sky.ForEach(s => s.Shift());
+                        shiftCount++;
+                        MagickImage image = new MagickImage(new MagickColor(255, 255, 255),
+                            dims.X, dims.Y);
+                        var drawables = sky.Select(p => new DrawableRectangle(p.Loc.X, p.Loc.Y, p.Loc.X + 2, p.Loc.Y + 2));
+                        image.Draw(drawables);
+                        image.Draw(new DrawableText(10,10,shiftCount.ToString()));
+                        image.AnimationDelay = 10;
+                        collection.Add(image);                        
+                    }                   
+                   
+                    // Optionally optimize the images (images should have the same size).
+                    collection.Optimize();
+
+                    // Save gif
+                    collection.Write(filename);
+                }
+                return filename;
+            }
+        }
 
         public static long Day9b
         {
@@ -196,6 +361,7 @@ namespace AoC2018
             }
         }
 
+        #region week1
 
         public static int Day7b
         {
@@ -663,6 +829,8 @@ namespace AoC2018
                 }
             )
             .First(x => !x.added).sum;
+
+        #endregion
 
     }
 }

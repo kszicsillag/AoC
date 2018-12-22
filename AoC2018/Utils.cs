@@ -20,8 +20,20 @@ namespace AoC2018
                 yield return list.ElementAt(index);
                 index = (index + 1) % count;
             }
+            // ReSharper disable once IteratorNeverReturns
+        }
+
+
+        public static IEnumerable<int> Digits(this int number)
+        {
+            do
+            {
+                yield return number % 10;
+                number /= 10;
+            } while (number > 0);
         }
       
+
 
 
     }
