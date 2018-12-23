@@ -38,9 +38,63 @@ namespace AoC2018
             //Console.WriteLine($"9a:{Day9a}");
             //Console.WriteLine($"9b:{Day9b}");
             //Console.WriteLine($"10:{Day10}");
-            Console.WriteLine($"11:{Day11a}");
-            Console.WriteLine($"11:{Day11b}");
+            //Console.WriteLine($"11a:{Day11a}");
+            //Console.WriteLine($"11b:{Day11b}");
+            Console.WriteLine($"12a:{Day12a}");
+            Console.WriteLine($"12b:{Day12b}");
             Console.ReadLine();
+        }
+
+        public static long Day12b => Day12(50000000000);
+
+        public static long Day12a => Day12(20);
+
+        private static long Day12(long goal)
+        {
+            var rawrows = File.ReadAllLines("input12.txt");
+            string state = rawrows[0].Substring(15);
+            List<(string state, long padding)> stateBuffer = new List<(string state, long padding)> {(state, 0)};
+            var rules = rawrows.Skip(2).Select(rr => rr.Split(" => ", StringSplitOptions.RemoveEmptyEntries))
+                .ToDictionary(arr => arr[0], arr => arr[1][0]);
+
+            state = "....." + state + ".....";
+            stateBuffer.Add((state, 5));
+            long padding = 5;
+            (string state, long padding) cStart = default, cEnd = default;
+            int? icycleStart = default, cycleLength = default;
+            long cnt;
+            for (cnt = 0; cnt < goal; cnt++)
+            {
+                state = new string(state
+                    .Select((c, i) => i < 2 || i > state.Length - 3 ? c : rules[state.Substring(i - 2, 5)]).ToArray());
+                int nLeftPadding = 5 - state.IndexOf("#");
+                int nRightPadding = 5 - (state.Length - 1 - state.LastIndexOf("#"));
+                state = nLeftPadding > 0 ? new string('.', nLeftPadding) + state : state.Substring(-nLeftPadding);
+                padding += nLeftPadding;
+                state = nRightPadding > 0
+                    ? state + new string('.', nRightPadding)
+                    : state.Substring(0, state.Length + nRightPadding);
+
+                int repeatedIndex = stateBuffer.FindLastIndex(x => x.state == state);
+                if (repeatedIndex > 0)
+                {
+                    cStart = stateBuffer[repeatedIndex];
+                    cEnd = (state, padding);
+                    icycleStart = repeatedIndex;
+                    cycleLength = stateBuffer.Count - repeatedIndex;
+                    break;
+                }
+                stateBuffer.Add((state, padding));
+            }
+
+            if (cycleLength.HasValue && cStart != default && cEnd != default)
+            {
+                var goalstate = stateBuffer[(int) ((goal - cnt) % cycleLength.Value) + icycleStart.Value];
+                state = goalstate.state;
+                padding = cStart.padding + ((goal - cnt) / cycleLength.Value) * (cEnd.padding - cStart.padding);
+            }
+            long retVal = state.Select((c, i) => (c, i)).Sum(x => x.c == '#' ? x.i - padding : 0);
+            return retVal;
         }
 
 
@@ -68,23 +122,23 @@ namespace AoC2018
                     {
                         for (int y = 0; y < 300 - a; y++)
                         {
-                            int p3x3;                           
+                            int pAxA;                           
                             if (a==1)
                             {
-                                p3x3 = (((x + 10) * y + serial) * (x + 10))
+                                pAxA = (((x + 10) * y + serial) * (x + 10))
                                                              .Digits()
                                                              .ElementAt(2) - 5;                                
                             }
                             else if (divs!=null)
                             {                                
-                                p3x3 = divs
+                                pAxA = divs
                                     .SelectMany(xx => divs, (xx, yy) => (xx, yy))
                                     .Sum(koord => matrix[koord.xx+x, koord.yy+y, largestDiv.Value].Value);                                
                             }
                             else
                             {
                                 var largestSubA = Enumerable.Range(1, a).Reverse().First(xa => matrix[x, y, xa].HasValue);
-                                p3x3 =
+                                pAxA =
                                     matrix[x, y, largestSubA].Value+
                                     Enumerable.Range(x , a)
                                         .SelectMany(xx => Enumerable.Range(y + largestSubA, a - largestSubA), (xx, yy) => (xx, yy))
@@ -97,10 +151,10 @@ namespace AoC2018
                                     .Sum(koord => matrix[koord.xx, koord.yy, 1].Value);
                                
                             }
-                            matrix[x, y, a] = p3x3;
-                            if (p3x3 > maxAxA)
+                            matrix[x, y, a] = pAxA;
+                            if (pAxA > maxAxA)
                             {
-                                maxAxA = p3x3;
+                                maxAxA = pAxA;
                                 maxAxAp.X = x;
                                 maxAxAp.Y = y;
                                 maxAxAp.Width = a;
