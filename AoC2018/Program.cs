@@ -37,9 +37,55 @@ namespace AoC2018
             //Console.WriteLine($"11b:{Day11b}");
             //Console.WriteLine($"12a:{Day12a}");
             //Console.WriteLine($"12b:{Day12b}");
-            Console.WriteLine($"13a:{Day13a}");
-            Console.WriteLine($"13b:{Day13b}");
+            //Console.WriteLine($"13a:{Day13a}");
+            //Console.WriteLine($"13b:{Day13b}");
+            //Console.WriteLine($"14a:{Day14a}");
+            Console.WriteLine($"14b:{Day14b}");
             Console.ReadLine();
+        }
+
+        public static int Day14b
+        {
+            get
+            {
+                const int goal = 170641;
+                int[] goalDigits = goal.Digits().Reverse().ToArray();
+                List<int> intList = new List<int> { 3, 7 };
+                int idx1 = 0, idx2 = 1;
+                do
+                {
+                    var toadd= (intList[idx1] + intList[idx2]).Digits().Reverse();
+                    foreach (int i in toadd)
+                    {
+                        intList.Add(i);
+                        if (intList.Count >= goalDigits.Length && intList
+                                .GetRange(intList.Count - goalDigits.Length, goalDigits.Length)
+                                .SequenceEqual(goalDigits))
+                            return intList.Count - goalDigits.Length;
+                    }
+                    idx1 = (idx1 + 1 + intList[idx1]) % intList.Count;
+                    idx2 = (idx2 + 1 + intList[idx2]) % intList.Count;                   
+                } while (true);
+            }
+        }
+
+
+        public static long Day14a
+        {
+            get
+            {
+                const int goal = 170641;
+                List<int> intList = new List<int>{3,7};
+                int idx1 = 0, idx2=1;
+                do
+                {
+                    intList.AddRange((intList[idx1] + intList[idx2]).Digits().Reverse());
+                    idx1 = (idx1 + 1 + intList[idx1]) % intList.Count;
+                    idx2 = (idx2 + 1 + intList[idx2]) % intList.Count;
+                } while (intList.Count < goal+10);
+               
+                return long.Parse(string.Join(string.Empty,intList.TakeLast(10).Select(i=>i.ToString())));
+            }
         }
 
 
