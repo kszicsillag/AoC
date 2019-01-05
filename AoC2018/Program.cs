@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Security.Cryptography.X509Certificates;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Xml.Schema;
 using ImageMagick;
 
 namespace AoC2018
@@ -40,9 +35,173 @@ namespace AoC2018
             //Console.WriteLine($"10:{Day10}");
             //Console.WriteLine($"11a:{Day11a}");
             //Console.WriteLine($"11b:{Day11b}");
-            Console.WriteLine($"12a:{Day12a}");
-            Console.WriteLine($"12b:{Day12b}");
+            //Console.WriteLine($"12a:{Day12a}");
+            //Console.WriteLine($"12b:{Day12b}");
+            Console.WriteLine($"13a:{Day13a}");
+            Console.WriteLine($"13b:{Day13b}");
             Console.ReadLine();
+        }
+
+
+        public static string Day13b
+        {
+            get
+            {
+                var rawCharData = File.ReadAllLines("input13.txt").Select(s => s.ToCharArray()).ToArray();
+
+                List<Day13DO> carts = new List<Day13DO>();
+                var map = new char[rawCharData.Length, rawCharData.Max(x => x.Length)];
+                for (var y = 0; y < rawCharData.Length; ++y)
+                {
+                    for (var x = 0; x < rawCharData[y].Length; ++x)
+                    {
+                        if (Day13DO.cart_tiles.Contains(rawCharData[y][x]))
+                        {
+                            Day13DO cart = new Day13DO(x, y, rawCharData[y][x], map);
+                            carts.Add(cart);
+                            map[x, y] = cart.InitialTileUnder;
+                        }
+                        else map[x, y] = rawCharData[y][x];
+                    }
+                }
+
+                Day13DO collide;
+                int cnt = 0;
+
+                //using (MagickImageCollection collection = new MagickImageCollection())
+                //{
+                do
+                {
+                    cnt++;
+                    carts.Sort((c1, c2) => c1.Y.CompareTo(c2.Y) != 0 ? c1.Y.CompareTo(c2.Y) : c1.X.CompareTo(c2.X));                  
+                    carts.ForEach(c =>
+                    {
+                        c.Step();
+                        carts.ForEach(cc => c.IsCollide(cc));
+                    });
+                    bool remove = carts.Any(c=>c.Crashed);
+                    carts.RemoveAll(c => c.Crashed);
+                    
+                    /*
+                    MagickImage image = new MagickImage(new MagickColor(255, 255, 255),
+                        map.GetLength(0)*4, map.GetLength(1)*4);
+                    for (int x = 0; x < map.GetLength(0); x++)
+                    {
+                        for (int y = 0; y < map.GetLength(1); y++)
+                        {
+                            if (map[x, y] == Day13DO.map_intersect)
+                                new Drawables()
+                                    .FillColor(MagickColor.FromRgb(0, 255, 0))
+                                    .Rectangle(x * 4, y * 4, x * 4 + 2, y * 4 + 2)
+                                    .Draw(image);
+                            else if (Day13DO.map_tiles.Contains(map[x,y]))
+                                new Drawables()
+                                    .FillColor(MagickColor.FromRgb(0, 0, 0))
+                                    .Rectangle(x * 4, y * 4, x * 4 + 2, y * 4 + 2)
+                                    .Draw(image);
+                        }
+                    }
+
+                    image.Draw(new DrawableFillColor(MagickColor.FromRgb(255, 0, 0)));
+                    foreach (var cart in carts)
+                    {
+                        new Drawables()
+                            .FillColor(MagickColor.FromRgb(255, 0, 0))
+                            .Rectangle(cart.X * 4, cart.Y * 4, cart.X * 4 + 2, cart.Y * 4 + 2)
+                            .Draw(image);                            
+                    }
+
+                    image.Draw(new DrawableText(10, 10, cnt.ToString()));
+                    image.AnimationDelay = 10;
+                    collection.Add(image);
+                    */
+
+                } while (carts.Count != 1);
+                // Optionally optimize the images (images should have the same size).
+                //collection.Optimize();
+
+                // Save gif
+                //collection.Write("day13dbg.gif");
+                //}
+                return $"{carts[0].X},{carts[0].Y}";
+            }
+        }
+
+        public static string Day13a
+        {
+            get
+            {
+                var rawCharData = File.ReadAllLines("input13.txt").Select(s=>s.ToCharArray()).ToArray();
+                                
+                List<Day13DO> carts= new List<Day13DO>();
+                var map = new char[rawCharData.Length, rawCharData.Max(x => x.Length)];
+                for (var y = 0; y < rawCharData.Length; ++y)
+                {
+                    for (var x = 0; x < rawCharData[y].Length; ++x)
+                    {
+                        if (Day13DO.cart_tiles.Contains(rawCharData[y][x]))
+                        {
+                            Day13DO cart = new Day13DO(x, y, rawCharData[y][x], map);
+                            carts.Add(cart);
+                            map[x, y] = cart.InitialTileUnder;
+                        }                    
+                        else map[x, y] = rawCharData[y][x];
+                    }
+                }
+
+                Day13DO collide;
+                int cnt = 0;
+               
+                //using (MagickImageCollection collection = new MagickImageCollection())
+                //{
+                    do
+                    {
+                        cnt++;
+                        carts.Sort((c1, c2) => c1.Y.CompareTo(c2.Y) != 0 ? c1.Y.CompareTo(c2.Y) : c1.X.CompareTo(c2.X));
+                        collide = carts.Do(c => c.Step()).FirstOrDefault(x => carts.Any(c => c.IsCollide(x)));
+                        /*
+                        MagickImage image = new MagickImage(new MagickColor(255, 255, 255),
+                            map.GetLength(0)*4, map.GetLength(1)*4);
+                        for (int x = 0; x < map.GetLength(0); x++)
+                        {
+                            for (int y = 0; y < map.GetLength(1); y++)
+                            {
+                                if (map[x, y] == Day13DO.map_intersect)
+                                    new Drawables()
+                                        .FillColor(MagickColor.FromRgb(0, 255, 0))
+                                        .Rectangle(x * 4, y * 4, x * 4 + 2, y * 4 + 2)
+                                        .Draw(image);
+                                else if (Day13DO.map_tiles.Contains(map[x,y]))
+                                    new Drawables()
+                                        .FillColor(MagickColor.FromRgb(0, 0, 0))
+                                        .Rectangle(x * 4, y * 4, x * 4 + 2, y * 4 + 2)
+                                        .Draw(image);
+                            }
+                        }
+
+                        image.Draw(new DrawableFillColor(MagickColor.FromRgb(255, 0, 0)));
+                        foreach (var cart in carts)
+                        {
+                            new Drawables()
+                                .FillColor(MagickColor.FromRgb(255, 0, 0))
+                                .Rectangle(cart.X * 4, cart.Y * 4, cart.X * 4 + 2, cart.Y * 4 + 2)
+                                .Draw(image);                            
+                        }
+
+                        image.Draw(new DrawableText(10, 10, cnt.ToString()));
+                        image.AnimationDelay = 10;
+                        collection.Add(image);
+                        */
+
+                    } while (collide == null);
+                    // Optionally optimize the images (images should have the same size).
+                    //collection.Optimize();
+
+                    // Save gif
+                    //collection.Write("day13dbg.gif");
+                //}
+                return $"{collide.X},{collide.Y}";
+            }
         }
 
         public static long Day12b => Day12(50000000000);
