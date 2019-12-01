@@ -6,6 +6,7 @@ using System.Text;
 
 namespace AoC2018
 {
+  
     static class Utils
     {
         /*https://codereview.stackexchange.com/a/92070*/
