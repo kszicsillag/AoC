@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using MathNet.Numerics;
 using MathNet.Spatial.Euclidean;
 using MathNet.Spatial.Units;
@@ -18,10 +19,10 @@ namespace AoC2019
             //Console.WriteLine($"2b:{Day2b}");
             //Console.WriteLine($"3a:{Day3a}");
             //Console.WriteLine($"3b:{Day3b}");
-            Console.WriteLine($"4a:{Day4a}");
-            Console.WriteLine($"4b:{Day4b}");
+            //Console.WriteLine($"4a:{Day4a}");
+            //Console.WriteLine($"4b:{Day4b}");
             //Console.WriteLine($"5a:{Day5a}");
-            //Console.WriteLine($"5b:{Day5b}");
+            Console.WriteLine($"5b:{Day5b}");
             //Console.WriteLine($"6a:{Day6a}");
             //Console.WriteLine($"6b:{Day6b}");
             //Console.WriteLine($"7a:{Day7a}");
@@ -205,10 +206,21 @@ namespace AoC2019
             }
         }
 
+        public static long Day5a => Day5(1);
+
+        public static long Day5b => Day5(5);
+
         static Lazy<int[]> day2Code = new Lazy<int[]>(
             () =>
             {
                 string fullCode = File.ReadAllText("input2.txt");
+                return fullCode.Split(',').Select(int.Parse).ToArray();
+            });
+
+        static Lazy<int[]> day5Code = new Lazy<int[]>(
+            () =>
+            {
+                string fullCode = File.ReadAllText("input5.txt");
                 return fullCode.Split(',').Select(int.Parse).ToArray();
             });
 
@@ -239,5 +251,56 @@ namespace AoC2019
                 return code[0];
         }
 
+
+        static long Day5(int input)
+        {
+            int[] code = (int[])day5Code.Value.Clone();
+            int i = 0, dcode=0;
+            string cString;
+
+            int ind(int offset) => cString[cString.Length - 2 - offset] == '0' ? code[i + offset] : i + offset;
+
+            do
+            {
+                cString = code[i].ToString("D5");
+                switch (code[i] % 100)
+                {
+                    case 99:
+                        i = code.Length;
+                        break;
+                    case 1:
+                        code[code[i+3]] = code[ind( 1)] + code[ind( 2)];
+                        i+= 4;
+                        break;
+                    case 2:
+                        code[code[i + 3]] = code[ind( 1)] * code[ind( 2)];
+                        i+= 4;
+                        break;
+                    case 3:
+                        code[code[i + 1]] = input;
+                        i += 2;
+                        break;
+                    case 4:
+                        dcode = code[ind(1)];
+                        i+= 2;
+                        break;
+                    case 5:
+                        if (code[ind(1)] != 0){ i = code[ind(2)]; } else i += 3;
+                        break;
+                    case 6:
+                        if (code[ind(1)] == 0) { i = code[ind(2)]; } else i += 3; 
+                        break;
+                    case 7:
+                        code[code[i + 3]] = code[ind(1)] < code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                    case 8:
+                        code[code[i + 3]] = code[ind(1)] == code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                }
+            } while (i < code.Length);
+            return dcode;
+        }
     }
 }
