@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
+using System.Xml;
 using MathNet.Numerics;
 using MathNet.Spatial.Euclidean;
 using MathNet.Spatial.Units;
@@ -24,9 +27,9 @@ namespace AoC2019
             //Console.WriteLine($"5a:{Day5a}");
             //Console.WriteLine($"5b:{Day5b}");
             //Console.WriteLine($"6a:{Day6a}");
-            Console.WriteLine($"6b:{Day6b}");
+            //Console.WriteLine($"6b:{Day6b}");
             //Console.WriteLine($"7a:{Day7a}");
-            //Console.WriteLine($"7b:{Day7b}");
+            Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
             //Console.WriteLine($"8b:{Day8b}");
             //Console.WriteLine($"9a:{Day9a}");
@@ -327,24 +330,92 @@ namespace AoC2019
             }
         }
 
-        static Lazy<int[]> day2Code = new Lazy<int[]>(
+        public static long Day7a
+        {
+            get
+            {
+                int maxio = 0;
+                for (int i = 1234; i < 43210; i++)
+                {
+                    string ds = i.ToString("D5");
+                    int io=0;
+                    if (ds.Distinct().Count() == 5 && ds.Max(c=>(int)char.GetNumericValue(c)) < 5)
+                    {
+                        foreach (char t in ds)
+                        {
+                            io=Day7aComp(  (int)char.GetNumericValue(t), io);
+                        }
+                    }
+                    if (io > maxio) maxio = io;
+                }
+                return maxio;
+            }
+        }
+
+        public static long Day7b
+        {
+            get
+            {
+                int maxio = 0;
+                for (int i = 56789; i < 98765; i++)
+                {
+                    string ds = i.ToString("D5");
+                    if (ds.Distinct().Count() == 5 && ds.Min(c => (int)char.GetNumericValue(c)) == 5)
+                    {
+                        (int output, int? nip) outp = default;
+                        int[] ios = ds.Select(c => (int) char.GetNumericValue(c)).ToArray();
+                        int[][] states = Enumerable.Repeat(0,ds.Length).Select(x => (int[])day7Code.Value.Clone()).ToArray();
+                        int?[] ips = Enumerable.Repeat<int?>(0, ds.Length).ToArray();
+                        for (int j = 0; j < ds.Length; j++)
+                        {
+                            outp = Day7bComp(states[j], ips[j].Value, ios[j], j>0? ios[j-1] : 0);
+                            ips[j] = outp.nip;
+                            ios[j] = outp.output;
+                        }
+
+                        do
+                        {
+                            for (int j = 0; j < ds.Length; j++)
+                            {
+                                outp = Day7bComp(states[j], ips[j].Value, ios[j==0? ios.Length-1 : j-1]);
+                                if (!outp.nip.HasValue)
+                                    break;
+                                ips[j] = outp.nip;
+                                ios[j] = outp.output;
+                            }
+                        } while (outp.nip.HasValue);
+
+                        if (ios[^1] > maxio)
+                            maxio = ios[^1];
+                    }
+                }
+                return maxio;
+            }
+        }
+
+        static readonly Lazy<int[]> day2Code = new Lazy<int[]>(
             () =>
             {
                 string fullCode = File.ReadAllText("input2.txt");
                 return fullCode.Split(',').Select(int.Parse).ToArray();
             });
 
-        static Lazy<int[]> day5Code = new Lazy<int[]>(
+        static readonly Lazy<int[]> day5Code = new Lazy<int[]>(
             () =>
             {
                 string fullCode = File.ReadAllText("input5.txt");
                 return fullCode.Split(',').Select(int.Parse).ToArray();
             });
 
+        static readonly Lazy<int[]> day7Code = new Lazy<int[]>(
+            () =>
+            {
+                string fullCode = File.ReadAllText("input7.txt");
+                return fullCode.Split(',').Select(int.Parse).ToArray();
+            });
+
         static long Day2(int noun, int verb)
         {
-
-            
                 int[] code = (int[])day2Code.Value.Clone();
                 code[1] = noun;
                 code[2] = verb;
@@ -418,6 +489,112 @@ namespace AoC2019
                 }
             } while (i < code.Length);
             return dcode;
+        }
+
+
+        static int Day7aComp(params int[] input)
+        {
+            int[] code = (int[])day7Code.Value.Clone();
+            int i = 0, dcode = 0;
+            string cString;
+
+            int ind(int offset) => cString[cString.Length - 2 - offset] == '0' ? code[i + offset] : i + offset;
+            int iinput = 0;
+
+            do
+            {
+                cString = code[i].ToString("D5");
+                switch (code[i] % 100)
+                {
+                    case 99:
+                        i = code.Length;
+                        break;
+                    case 1:
+                        code[code[i + 3]] = code[ind(1)] + code[ind(2)];
+                        i += 4;
+                        break;
+                    case 2:
+                        code[code[i + 3]] = code[ind(1)] * code[ind(2)];
+                        i += 4;
+                        break;
+                    case 3:
+                        code[code[i + 1]] = input[iinput];
+                        iinput++;
+                        i += 2;
+                        break;
+                    case 4:
+                        dcode = code[ind(1)];
+                        i += 2;
+                        break;
+                    case 5:
+                        if (code[ind(1)] != 0) { i = code[ind(2)]; } else i += 3;
+                        break;
+                    case 6:
+                        if (code[ind(1)] == 0) { i = code[ind(2)]; } else i += 3;
+                        break;
+                    case 7:
+                        code[code[i + 3]] = code[ind(1)] < code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                    case 8:
+                        code[code[i + 3]] = code[ind(1)] == code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                }
+            } while (i < code.Length);
+            return dcode;
+        }
+
+        static (int, int?) Day7bComp(int[] code, int i, params int[] input)
+        {
+            //int[] code = (int[])day7Code.Value.Clone();
+            string cString;
+
+            int ind(int offset) => cString[cString.Length - 2 - offset] == '0' ? code[i + offset] : i + offset;
+            int iinput = 0;
+
+            do
+            {
+                cString = code[i].ToString("D5");
+                switch (code[i] % 100)
+                {
+                    case 99:
+                        i = code.Length;
+                        break;
+                    case 1:
+                        code[code[i + 3]] = code[ind(1)] + code[ind(2)];
+                        i += 4;
+                        break;
+                    case 2:
+                        code[code[i + 3]] = code[ind(1)] * code[ind(2)];
+                        i += 4;
+                        break;
+                    case 3:
+                        code[code[i + 1]] = input[iinput];
+                        iinput++;
+                        i += 2;
+                        break;
+                    case 4:
+                        var dcode = code[ind(1)];
+                        i += 2;
+                        return (dcode, i);
+                    case 5:
+                        if (code[ind(1)] != 0) { i = code[ind(2)]; } else i += 3;
+                        break;
+                    case 6:
+                        if (code[ind(1)] == 0) { i = code[ind(2)]; } else i += 3;
+                        break;
+                    case 7:
+                        code[code[i + 3]] = code[ind(1)] < code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                    case 8:
+                        code[code[i + 3]] = code[ind(1)] == code[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                }
+            } while (i < code.Length);
+            return (-1,null);
         }
     }
 }
