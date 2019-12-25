@@ -22,9 +22,9 @@ namespace AoC2019
             //Console.WriteLine($"4a:{Day4a}");
             //Console.WriteLine($"4b:{Day4b}");
             //Console.WriteLine($"5a:{Day5a}");
-            Console.WriteLine($"5b:{Day5b}");
+            //Console.WriteLine($"5b:{Day5b}");
             //Console.WriteLine($"6a:{Day6a}");
-            //Console.WriteLine($"6b:{Day6b}");
+            Console.WriteLine($"6b:{Day6b}");
             //Console.WriteLine($"7a:{Day7a}");
             //Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
@@ -209,6 +209,123 @@ namespace AoC2019
         public static long Day5a => Day5(1);
 
         public static long Day5b => Day5(5);
+
+        public static long Day6a
+        {
+            get
+            {
+                Dictionary<string, UniverseObject> uod= new Dictionary<string, UniverseObject>();
+                var lines = File.ReadAllLines("input6.txt")
+                    .Select(l=>l.Split(')'))
+                    .Select(a => new { O1 = a[0], O2 = a[1] });
+                
+                foreach (var line in lines)
+                {
+                    if (!uod.TryGetValue(line.O1, out UniverseObject o1))
+                    {
+                        o1= new UniverseObject(line.O1);
+                        uod.Add(o1.ID, o1);
+                    }
+                    if (!uod.TryGetValue(line.O2, out UniverseObject o2))
+                    {
+                        o2 = new UniverseObject(line.O2);
+                        uod.Add(o2.ID, o2);
+                    }
+                    o2.OrbitParent = o1;
+                }
+
+                //List<List<UniverseObject>> paths= new List<List<UniverseObject>> { new List<UniverseObject>{uod["COM"]} };
+
+                //List<List<UniverseObject>> lastpaths=paths, newpaths;
+
+                //do
+                //{
+                //    newpaths = new List<List<UniverseObject>>();
+                //    foreach (List<UniverseObject> path in lastpaths)
+                //    {
+                //        foreach (UniverseObject child in path.Last().OrbitChildren)
+                //        { 
+                //            List<UniverseObject> np = new List<UniverseObject>(path)
+                //            {
+                //               child
+                //            };
+                //            newpaths.Add(np);
+                //        }
+                //    }
+                //    paths.AddRange(newpaths);
+                //    lastpaths = newpaths;
+                //} while (newpaths.Any());
+                //return paths.Sum(p => p.Count);
+
+                long cntr=0;
+                foreach (UniverseObject o in uod.Values.Where(o=>o.OrbitParent != null))
+                {
+                    UniverseObject vo=o;
+                    do
+                    {
+                        vo = vo.OrbitParent;
+                        cntr++;
+                    } while (vo.OrbitParent != null);
+                }
+
+                return cntr;
+            }
+        }
+
+
+        public static long Day6b
+        {
+            get
+            {
+                Dictionary<string, UniverseObject> uod = new Dictionary<string, UniverseObject>();
+                var lines = File.ReadAllLines("input6.txt")
+                    .Select(l => l.Split(')'))
+                    .Select(a => new { O1 = a[0], O2 = a[1] });
+
+                foreach (var line in lines)
+                {
+                    if (!uod.TryGetValue(line.O1, out UniverseObject o1))
+                    {
+                        o1 = new UniverseObject(line.O1);
+                        uod.Add(o1.ID, o1);
+                    }
+                    if (!uod.TryGetValue(line.O2, out UniverseObject o2))
+                    {
+                        o2 = new UniverseObject(line.O2);
+                        uod.Add(o2.ID, o2);
+                    }
+                    o2.OrbitParent = o1;
+                }
+
+                List<List<UniverseObject>> lastpaths = new List<List<UniverseObject>> { new List<UniverseObject> { uod["YOU"] } };
+
+                List<List<UniverseObject>> newpaths;
+
+                do
+                {
+                    newpaths = new List<List<UniverseObject>>();
+                    foreach (List<UniverseObject> path in lastpaths)
+                    {
+                        UniverseObject uo = path.Last();
+                        if (uo.OrbitParent == uod["SAN"] || uo.OrbitChildren.Any(x => x.ID == "SAN"))
+                            return path.Count-2;
+                        if (uo.OrbitParent != null && !path.Contains(uo.OrbitParent))
+                        {
+                            List<UniverseObject> np = new List<UniverseObject>(path){uo.OrbitParent};
+                            newpaths.Add(np);
+                        }
+                        foreach (UniverseObject child in uo.OrbitChildren.Where(x=>!path.Contains(x)))
+                        {
+                            List<UniverseObject> np = new List<UniverseObject>(path) { child };
+                            newpaths.Add(np);
+                        }
+                    }
+                    lastpaths = newpaths;
+                } while (newpaths.Any());
+                return -1;
+
+            }
+        }
 
         static Lazy<int[]> day2Code = new Lazy<int[]>(
             () =>
