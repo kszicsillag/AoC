@@ -34,9 +34,9 @@ namespace AoC2019
             //Console.WriteLine($"7a:{Day7a}");
             //Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
-            Console.WriteLine($"8b:{Day8b}");
+            //Console.WriteLine($"8b:{Day8b}");
             //Console.WriteLine($"9a:{Day9a}");
-            //Console.WriteLine($"9b:{Day9b}");
+            Console.WriteLine($"9b:{Day9b}");
             //Console.WriteLine($"10:{Day10}");
             //Console.WriteLine($"11a:{Day11a}");
             //Console.WriteLine($"11b:{Day11b}");
@@ -424,6 +424,11 @@ namespace AoC2019
             }
         }
 
+        public static long Day9a => Day9Comp(day9Code.Value,0,1).output;
+
+        public static long Day9b => Day9Comp(day9Code.Value, 0, 2).output;
+
+
 
         static readonly Lazy<int[]> day2Code = new Lazy<int[]>(
             () =>
@@ -439,11 +444,20 @@ namespace AoC2019
                 return fullCode.Split(',').Select(int.Parse).ToArray();
             });
 
-        static readonly Lazy<int[]> day7Code = new Lazy<int[]>(
+        private static readonly Lazy<int[]> day7Code = new Lazy<int[]>(
             () =>
             {
                 string fullCode = File.ReadAllText("input7.txt");
                 return fullCode.Split(',').Select(int.Parse).ToArray();
+            });
+
+        static readonly Lazy<Dictionary<long,long>> day9Code = new Lazy<Dictionary<long, long>>(
+            () =>
+            {
+                string fullCode = File.ReadAllText("input9.txt");
+                return fullCode.Split(',')
+                    .Select((val, idx)=> new {val=long.Parse(val), idx=(long)idx})
+                    .ToDictionary(x=>x.idx, x=>x.val);
             });
 
         static long Day2(int noun, int verb)
@@ -579,7 +593,7 @@ namespace AoC2019
 
         static (int, int?) Day7bComp(int[] code, int i, params int[] input)
         {
-            //int[] code = (int[])day7Code.Value.Clone();
+            //int[] mem = (int[])day7Code.Value.Clone();
             string cString;
 
             int ind(int offset) => cString[cString.Length - 2 - offset] == '0' ? code[i + offset] : i + offset;
@@ -628,5 +642,68 @@ namespace AoC2019
             } while (i < code.Length);
             return (-1,null);
         }
+
+        static (long output, long? nip) Day9Comp(Dictionary<long, long> mem, long i, params long[] input)
+        {
+            string cString;
+            long rBase = 0;
+
+            long ind(long offset) => cString[(int)(cString.Length - 2 - offset)] switch
+            {
+                '0' => mem[i + offset],
+                '1' => i + offset,
+                _ => rBase + mem[i + offset]
+            };
+            uint iinput = 0;
+            long dcode=0;
+            do
+            {
+                cString = mem[i].ToString("D5");
+                switch (mem[i] % 100)
+                {
+                    case 99:
+                        i = mem.Count;
+                        break;
+                    case 1:
+                        mem[ind(3)] = mem[ind(1)] + mem[ind(2)];
+                        i += 4;
+                        break;
+                    case 2:
+                        mem[ind(3)] = mem[ind(1)] * mem[ind(2)];
+                        i += 4;
+                        break;
+                    case 3:
+                        mem[ind(1)] = input[iinput]; 
+                        iinput++;
+                        i += 2;
+                        break;
+                    case 4:
+                        dcode = mem[ind(1)];
+                        i += 2;
+                        Console.WriteLine(dcode);
+                        break;
+                    case 5:
+                        if (mem[ind(1)] != 0) { i = mem[ind(2)]; } else i += 3;
+                        break;
+                    case 6:
+                        if (mem[ind(1)] == 0) { i = mem[ind(2)]; } else i += 3;
+                        break;
+                    case 7:
+                        mem[ind(3)] = mem[ind(1)] < mem[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                    case 8:
+                        mem[ind(3)] = mem[ind(1)] == mem[ind(2)] ? 1 : 0;
+                        i += 4;
+                        break;
+                    case 9:
+                        rBase += mem[ind(1)];
+                        i += 2;
+                        break;
+                }
+            } while (i < mem.Count);
+            return (dcode, null);
+        }
+
     }
 }
