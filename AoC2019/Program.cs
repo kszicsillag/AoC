@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -16,6 +18,7 @@ namespace AoC2019
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             //Console.WriteLine($"1a:{Day1a}");
             //Console.WriteLine($"1b:{Day1b}");
             //Console.WriteLine($"2a:{Day2a}");
@@ -29,9 +32,9 @@ namespace AoC2019
             //Console.WriteLine($"6a:{Day6a}");
             //Console.WriteLine($"6b:{Day6b}");
             //Console.WriteLine($"7a:{Day7a}");
-            Console.WriteLine($"7b:{Day7b}");
+            //Console.WriteLine($"7b:{Day7b}");
             //Console.WriteLine($"8a:{Day8a}");
-            //Console.WriteLine($"8b:{Day8b}");
+            Console.WriteLine($"8b:{Day8b}");
             //Console.WriteLine($"9a:{Day9a}");
             //Console.WriteLine($"9b:{Day9b}");
             //Console.WriteLine($"10:{Day10}");
@@ -237,29 +240,6 @@ namespace AoC2019
                     o2.OrbitParent = o1;
                 }
 
-                //List<List<UniverseObject>> paths= new List<List<UniverseObject>> { new List<UniverseObject>{uod["COM"]} };
-
-                //List<List<UniverseObject>> lastpaths=paths, newpaths;
-
-                //do
-                //{
-                //    newpaths = new List<List<UniverseObject>>();
-                //    foreach (List<UniverseObject> path in lastpaths)
-                //    {
-                //        foreach (UniverseObject child in path.Last().OrbitChildren)
-                //        { 
-                //            List<UniverseObject> np = new List<UniverseObject>(path)
-                //            {
-                //               child
-                //            };
-                //            newpaths.Add(np);
-                //        }
-                //    }
-                //    paths.AddRange(newpaths);
-                //    lastpaths = newpaths;
-                //} while (newpaths.Any());
-                //return paths.Sum(p => p.Count);
-
                 long cntr=0;
                 foreach (UniverseObject o in uod.Values.Where(o=>o.OrbitParent != null))
                 {
@@ -326,7 +306,6 @@ namespace AoC2019
                     lastpaths = newpaths;
                 } while (newpaths.Any());
                 return -1;
-
             }
         }
 
@@ -392,6 +371,59 @@ namespace AoC2019
                 return maxio;
             }
         }
+
+        public static long Day8a
+        {
+            get
+            {
+                string rawtext = File.ReadAllText("input8.txt");
+                int chunkSize = 25 * 6;
+                return Enumerable.Range(0, rawtext.Length / chunkSize)
+                    .Select(i => rawtext.Substring(i * chunkSize, chunkSize))
+                    .Select(ss=>new {ZC=ss.Count(c=>c=='0'), CheckSum= ss.Count(c => c == '1') * ss.Count(c => c == '2') })
+                    .MinBy(x=>x.ZC)
+                    .First().CheckSum;
+            }
+        }
+
+        public static string Day8b
+        {
+            get
+            {
+                string rawtext = File.ReadAllText("input8.txt");
+                const int width = 25;
+                const int height = 6;
+                int chunkSize = width * height;
+                char[] imgChars = rawtext
+                    .Select((c, idx) => new {C = c, Idx = idx})
+                    .GroupBy(x => x.Idx % chunkSize)
+                    .Select(g=>(g.FirstOrDefault(x=>x.C!='2')?.C) ?? '2').ToArray();
+                int scale = 40;
+                Bitmap img = new Bitmap((width+2)*scale, (height+2)*scale);
+                Graphics imgg = Graphics.FromImage(img);
+                imgg.FillRectangle(Brushes.Black, 0, 0, img.Width, img.Height);
+                for (int i = 0; i < height; i++)
+                {
+                    for (int j = 0; j < width; j++)
+                    {
+                        Brush b = imgChars[(i*width)+j] switch
+                        {
+                            '1' => Brushes.White, //white
+                            '0' => Brushes.Black, //black
+                            _ => Brushes.Transparent
+                        };
+                        imgg.FillRectangle(b, (j+1) * scale, (i+1) * scale, scale, scale);
+                    }
+                }
+
+                string filename = "aoc8b.png";
+                img.Save(filename);
+                ProcessStartInfo si = new ProcessStartInfo( filename){UseShellExecute = true};
+                Process.Start(si);
+                return "View the image";
+            }
+        }
+
 
         static readonly Lazy<int[]> day2Code = new Lazy<int[]>(
             () =>
