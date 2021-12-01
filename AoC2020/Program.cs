@@ -17,8 +17,71 @@ namespace AoC2020
             //Console.WriteLine(await Day3aAsync());
             //Console.WriteLine(await Day3bAsync());
             //Console.WriteLine(Day4a());
-            Console.WriteLine(Day4b());
+            //Console.WriteLine(Day4b());
+            //Console.WriteLine(Day5a());
+            //Console.WriteLine(Day5b());
+            Console.WriteLine(Day6b());
             Console.WriteLine("Hello World!");
+        }
+
+        private static int Day6a()
+        {
+            var lines= File.ReadAllLines("input/day6.txt");
+            HashSet<char> chars= new HashSet<char>();
+            int r=0;
+            foreach(string l in lines)
+            {
+                if(l.Length==0)
+                {   
+                    r+=chars.Count;
+                    chars.Clear();
+                }
+                else
+                {
+                    chars.UnionWith(l);
+                }
+            }
+            return r+chars.Count;
+        }
+
+        private static int Day6b()
+        {
+            var lines= File.ReadAllLines("input/day6.txt");
+            HashSet<char> defaultSet= new HashSet<char>{'0'};
+            HashSet<char> chars= new HashSet<char>{'0'};
+            int r=0;
+            foreach(string l in lines)
+            {
+                if(l.Length==0)
+                {   
+                    r+=chars.Count;
+                    chars.Clear();
+                    chars.UnionWith(defaultSet);                    
+                }
+                else
+                {
+                    if(chars.SetEquals(defaultSet))
+                    {
+                        chars.Clear();
+                        chars.UnionWith(l);
+                    }
+                    else chars.IntersectWith(l);
+                }
+            }
+            return r+chars.Count;
+        }
+
+        private static int Day5a()
+        {
+            return File.ReadAllLines("input/day5.txt").Max(l=>Convert.ToInt32(l.Replace('F','0').Replace('B','1').Replace('R','1').Replace('L','0'),2));
+        }
+
+        private static int Day5b()
+        {
+            var ids = File.ReadAllLines("input/day5.txt")
+                        .Select(l=>Convert.ToInt32(l.Replace('F','0').Replace('B','1').Replace('R','1').Replace('L','0'),2));
+            var minid=ids.Min();
+            return Enumerable.Range(minid,ids.Max()-ids.Min()).Except(ids).Single();
         }
 
         private static int Day4b()
