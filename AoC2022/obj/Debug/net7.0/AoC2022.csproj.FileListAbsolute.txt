@@ -1,0 +1,15 @@
+/workspaces/AoC/AoC2022/bin/Debug/net7.0/AoC2022
+/workspaces/AoC/AoC2022/bin/Debug/net7.0/AoC2022.deps.json
+/workspaces/AoC/AoC2022/bin/Debug/net7.0/AoC2022.runtimeconfig.json
+/workspaces/AoC/AoC2022/bin/Debug/net7.0/AoC2022.dll
+/workspaces/AoC/AoC2022/bin/Debug/net7.0/AoC2022.pdb
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.csproj.AssemblyReference.cache
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.AssemblyInfoInputs.cache
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.AssemblyInfo.cs
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.csproj.CoreCompileInputs.cache
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.dll
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/refint/AoC2022.dll
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.pdb
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/AoC2022.genruntimeconfig.cache
+/workspaces/AoC/AoC2022/obj/Debug/net7.0/ref/AoC2022.dll
