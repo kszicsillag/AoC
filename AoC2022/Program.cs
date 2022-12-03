@@ -3,8 +3,31 @@ using System.Reactive.Linq;
 
 //Day1a();
 //await Day1b();
-Day2b();
+//Day2a();
+//Day2b();
+//Day3a();
+Day3b();
 
+
+void Day3b()
+{  
+
+    var x=File.ReadLines("input/day3.txt")
+            .Chunk(3)
+            .Select(x3=>x3.Aggregate(Enumerable.Empty<char>(),(a,x)=>a.Any() ? a.Intersect(x) : x).FirstOrDefault())
+            .Sum(x=> (int)x - (char.IsUpper(x) ? (int)'A'-26 : (int)'a')+1);
+    System.Console.WriteLine(x);  
+    
+}
+
+
+void Day3a()
+{  
+    var x=File.ReadLines("input/day3.txt")
+            .Select(x=>x[..(x.Length/2)].Intersect(x[(x.Length/2)..]).First())
+            .Sum(x=> (int)x - (char.IsUpper(x) ? (int)'A'-26 : (int)'a')+1);
+    System.Console.WriteLine(x);      
+}
 
 void Day2a()
 {
