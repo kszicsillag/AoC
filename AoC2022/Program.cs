@@ -6,7 +6,26 @@ using System.Reactive.Linq;
 //Day2a();
 //Day2b();
 //Day3a();
-Day3b();
+//Day3b();
+//Day4a();
+Day4b();
+
+void Day4b()
+{
+     var x=File.ReadLines("input/day4.txt")
+            .Select(l=>l.Split(',','-').Select(int.Parse).ToArray())
+            .Count(la=> la[0] <= la[3] ? la[0]<=la[3] && la[2]<=la[1] : la[2]<=la[1] && la[0]<=la[3] );
+    System.Console.WriteLine(x);  
+}
+
+
+void Day4a()
+{
+     var x=File.ReadLines("input/day4.txt")
+            .Select(l=>l.Split(',','-').Select(int.Parse).ToArray())
+            .Count(la=> la[1]-la[0] >= la[3]-la[2] ? la[0]<=la[2] && la[1]>=la[3] : la[2]<=la[0] && la[3]>=la[1]);
+    System.Console.WriteLine(x);  
+}
 
 
 void Day3b()
