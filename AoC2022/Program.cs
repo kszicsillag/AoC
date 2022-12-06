@@ -1,5 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
+using MoreLinq;
 
 //Day1a();
 //await Day1b();
@@ -8,7 +8,91 @@ using System.Reactive.Linq;
 //Day3a();
 //Day3b();
 //Day4a();
-Day4b();
+//Day4b();
+//Day5a();
+//Day5b();
+Day6(4);
+Day6(14);
+
+void Day6(int windowSize)
+{
+    IEnumerable<char> ReadChars(string path)
+    {
+        using StreamReader reader = new StreamReader(path);
+        while (!reader.EndOfStream)
+            yield return (char)reader.Read();
+    }
+
+    var ret=ReadChars("input/day6.txt")
+        .Select((c,i)=>(c,i+1))
+        .Window(windowSize)
+        .First(x=>x.Select(xx=>xx.c).Distinct().Count()==windowSize);                       
+    System.Console.WriteLine(ret.Last().Item2);  
+}
+
+
+void Day5b()
+{
+
+     var stacks=File.ReadLines("input/day5.txt")
+            .TakeWhile(l=>!l.StartsWith(" 1 "))
+            .SelectMany((l,rowi)=>l.Chunk(4).Select((c,coli)=>(c[1],coli,rowi)))
+            .GroupBy(x=>x.coli)
+            .ToDictionary(g=>g.Key,g=>new Stack<char>(g.Where(x=>x.Item1 != ' ').OrderByDescending(x=>x.rowi).Select(x=>x.Item1)));
+    System.Console.WriteLine(stacks);      
+
+    var moves=File.ReadLines("input/day5.txt")
+            .SkipWhile(l=>!l.StartsWith("move"))
+            .Select(l=>l.Split(' '))
+            .Select(l=>(int.Parse(l[1]),int.Parse(l[3]),int.Parse(l[5])));
+
+    Stack<char> tmpstak= new Stack<char>();
+    foreach(var x in moves)
+    {
+        tmpstak.Clear();
+        for(int i=0; i<x.Item1;i++)
+        {
+            tmpstak.Push(stacks[x.Item2-1].Pop());
+        }
+        while(tmpstak.Count > 0)
+        {
+            stacks[x.Item3-1].Push(tmpstak.Pop());
+        }
+    }
+
+    var result=new string(stacks.Select(s=>s.Value.Peek()).ToArray());
+    System.Console.WriteLine(result);
+}
+
+
+void Day5a()
+{
+
+     var stacks=File.ReadLines("input/day5.txt")
+            .TakeWhile(l=>!l.StartsWith(" 1 "))
+            .SelectMany((l,rowi)=>l.Chunk(4).Select((c,coli)=>(c[1],coli,rowi)))
+            .GroupBy(x=>x.coli)
+            .ToDictionary(g=>g.Key,g=>new Stack<char>(g.Where(x=>x.Item1 != ' ').OrderByDescending(x=>x.rowi).Select(x=>x.Item1)));
+    System.Console.WriteLine(stacks);      
+
+    var moves=File.ReadLines("input/day5.txt")
+            .SkipWhile(l=>!l.StartsWith("move"))
+            .Select(l=>l.Split(' '))
+            .Select(l=>(int.Parse(l[1]),int.Parse(l[3]),int.Parse(l[5])));
+
+    foreach(var x in moves)
+    {
+        for(int i=0; i<x.Item1;i++)
+        {
+            stacks[x.Item3-1].Push(stacks[x.Item2-1].Pop());
+        }
+    }
+
+    var result=new string(stacks.Select(s=>s.Value.Peek()).ToArray());
+    System.Console.WriteLine(result);
+}
+
+
 
 void Day4b()
 {
