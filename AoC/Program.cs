@@ -1,9 +1,67 @@
-﻿using Humanizer;
+﻿using System.Text.RegularExpressions;
+using Humanizer;
 
 //Console.WriteLine("1a:"+Day1a());
 //Console.WriteLine("1b:"+Day1b());
-Console.WriteLine("2a:"+Day2a());
-Console.WriteLine("2b:"+Day2b());
+//Console.WriteLine("2a:"+Day2a());
+//Console.WriteLine("2b:"+Day2b());
+Console.WriteLine("3a:"+Day3a());
+Console.WriteLine("3b:"+Day3b());
+
+static int Day3a()
+{
+    var charMap=File.ReadAllLines(Path.Combine(GetInputPath(),"day3.txt"))
+                .Select(l=>l.ToArray()).ToArray();
+     
+     var tmp=File.ReadAllLines(Path.Combine(GetInputPath(),"day3.txt"))
+        .Select((l,li)=>new {Line=l, LineIndex = li, Parts=Regex.Matches(l, @"\d+")
+                                        .Select(m=>new {Match=m, IsPart=Enumerable.Range(m.Index, m.Length)
+                                                                     .SelectMany(xr=>new []
+                                                                        {(li,xr-1)
+                                                                         ,(li,xr+1)
+                                                                         ,(li-1,xr-1)
+                                                                         ,(li-1,xr+1)
+                                                                         ,(li-1,xr)
+                                                                         ,(li+1,xr-1)
+                                                                         ,(li+1,xr+1)
+                                                                         ,(li+1,xr)
+                                                                        }.Where(xrr=>xrr.Item1>=0 && xrr.Item1<charMap.Length && xrr.Item2 >= 0 && xrr.Item2 < charMap[0].Length))
+                                                                        .Select(xrr=>charMap[xrr.Item1][xrr.Item2])
+                                                                        .Any(cx=>cx != '.' && !char.IsDigit(cx))
+                                                                        })})   
+        .Sum(x2=>x2.Parts.Where(xp=>xp.IsPart).Sum(xp=>int.Parse(xp.Match.Value)));        
+    return tmp;
+}
+
+static int Day3b()
+{
+    var charMap=File.ReadAllLines(Path.Combine(GetInputPath(),"day3.txt"))
+                .Select(l=>l.ToArray()).ToArray();
+     
+     var tmp=File.ReadAllLines(Path.Combine(GetInputPath(),"day3.txt"))
+        .Select((l,li)=>new {Line=l, LineIndex = li, Parts=Regex.Matches(l, @"\d+")
+                                        .Select(m=>new {Match=m, Stars=Enumerable.Range(m.Index, m.Length)
+                                                                     .SelectMany(xr=>new []
+                                                                        {(li,xr-1)
+                                                                         ,(li,xr+1)
+                                                                         ,(li-1,xr-1)
+                                                                         ,(li-1,xr+1)
+                                                                         ,(li-1,xr)
+                                                                         ,(li+1,xr-1)
+                                                                         ,(li+1,xr+1)
+                                                                         ,(li+1,xr)
+                                                                        }.Where(xrr=>xrr.Item1>=0 && xrr.Item1<charMap.Length && xrr.Item2 >= 0 && xrr.Item2 < charMap[0].Length))
+                                                                        .Distinct()
+                                                                        .Where(xrr=>charMap[xrr.Item1][xrr.Item2]=='*')
+                                                                        })})
+        .SelectMany(x2=>x2.Parts.Where(p=>p.Stars.Any())).ToArray();
+        var tmp2= 
+            tmp.SelectMany(x=>x.Stars).Distinct()
+               .Select(xs=>tmp.Where(xx=>xx.Stars.Contains(xs)).ToArray())
+               .Where(xss=>xss.Length == 2)
+               .Sum(xss=>int.Parse(xss[0].Match.Value)*int.Parse(xss[1].Match.Value));
+    return tmp2;
+}
 
 static int Day2a() =>
     File.ReadAllLines(Path.Combine(GetInputPath(),"day2.txt"))
