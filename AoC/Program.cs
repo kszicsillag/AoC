@@ -1,12 +1,52 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Numerics;
+using System.Text.RegularExpressions;
 using Humanizer;
 
 //Console.WriteLine("1a:"+Day1a());
 //Console.WriteLine("1b:"+Day1b());
 //Console.WriteLine("2a:"+Day2a());
 //Console.WriteLine("2b:"+Day2b());
-Console.WriteLine("3a:"+Day3a());
-Console.WriteLine("3b:"+Day3b());
+//Console.WriteLine("3a:"+Day3a());
+//Console.WriteLine("3b:"+Day3b());
+//Console.WriteLine("4a:"+Day4a());
+Console.WriteLine("4b:"+Day4b());
+
+static int Day4a()=> File.ReadAllLines(Path.Combine(GetInputPath(),"day4.txt"))
+        .Select(l=>l.Split(new []{':', '|'}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(ls=>!ls.StartsWith("Card"))
+                .Select(ls=>new HashSet<int>(ls.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(ils=>int.Parse(ils))))
+                .ToArray()
+               )
+        .Select(blocks1n2=>blocks1n2[0].Intersect(blocks1n2[1]).Count())
+        .Sum(winningCnt=>winningCnt == 0 ? 0 : (int)BigInteger.Pow(new BigInteger(2), winningCnt-1));
+
+static int Day4b()
+{
+    char[] splitChars=[':', '|'];
+    var cardWinningsLookup=File.ReadAllLines(Path.Combine(GetInputPath(),"day4.txt"))
+        .Select(l=>l.Split(splitChars, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        .Select(ls => new{ GameNo=int.Parse(ls[0].Replace("Card ", string.Empty)), 
+                          Blocks=ls.Skip(1)
+                                 .Select(numblock=>new HashSet<int>(numblock.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                                            .Select(ils=>int.Parse(ils)))
+                                        )
+                                 .ToArray()})
+        .Select(lx=>new {lx.GameNo, W=lx.Blocks[0].Intersect(lx.Blocks[1]).Count()})
+        .ToDictionary(lxx=>lxx.GameNo, lxx=>lxx.W);
+    
+    int cnt=cardWinningsLookup.Count;
+    int[] newborns= [.. cardWinningsLookup.Keys];
+    do
+    {
+        newborns=newborns.SelectMany(i=>cardWinningsLookup[i]==0 ? 
+                                        Enumerable.Empty<int>() : 
+                                        Enumerable.Range(i+1, cardWinningsLookup[i]))
+                         .ToArray();        
+        cnt+=newborns.Length;
+    }while(newborns.Length > 0);
+    return cnt;
+}
+
 
 static int Day3a()
 {
