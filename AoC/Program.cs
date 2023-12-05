@@ -63,19 +63,19 @@ long Day5b()
         {
             var parts=l.Split(' ',StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                         .Select(long.Parse).ToArray();            
-            TimeRange str = new TimeRange(DateTime.UnixEpoch.AddSeconds(parts[1]), TimeSpan.FromSeconds(parts[2])); 
-            TimeRange dtr = new TimeRange(DateTime.UnixEpoch.AddSeconds(parts[0]), TimeSpan.FromSeconds(parts[2]));              
+            TimeRange str = new(DateTime.UnixEpoch.AddSeconds(parts[1]), TimeSpan.FromSeconds(parts[2])); 
+            TimeRange dtr = new (DateTime.UnixEpoch.AddSeconds(parts[0]), TimeSpan.FromSeconds(parts[2]));              
             List<TimeRange> toAdd = [];
             List<TimeRange> toRemove=[];
             foreach(var match in ranges.Where(r=>r.IntersectsWith(str)))
             {
                var iRange=match.GetIntersection(str);
-               TimeRange mapped=new TimeRange(dtr.Start+(iRange.Start-str.Start), iRange.Duration);
+               TimeRange mapped=new(dtr.Start+(iRange.Start-str.Start), iRange.Duration);
                newRanges.Add(mapped);
                if(mapped.Start<minDateTime)
                 minDateTime = mapped.Start;
                toRemove.Add(match);
-               TimePeriodSubtractor<TimeRange> subtractor = new TimePeriodSubtractor<TimeRange>();
+               TimePeriodSubtractor<TimeRange> subtractor = new();
                ITimePeriodCollection subtractedPeriods =
                     subtractor.SubtractPeriods( new TimePeriodCollection{match}, new TimePeriodCollection{str} );
                toAdd.AddRange(subtractedPeriods.OfType<TimeRange>());              
@@ -83,9 +83,9 @@ long Day5b()
             toRemove.ForEach(tr=>ranges.Remove(tr));
             ranges.AddRange(toAdd);
         }
-        else if(newRanges.Any())
+        else if(newRanges.Count != 0)
         {
-           ranges=ranges.Concat(newRanges).ToList();
+           ranges=[.. ranges, .. newRanges];
            newRanges = [];
            minDateTime=DateTime.MaxValue;
         }
