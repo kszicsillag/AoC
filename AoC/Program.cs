@@ -1,6 +1,8 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using Humanizer;
+using Itenso.TimePeriod;
 
 //Console.WriteLine("1a:"+Day1a());
 //Console.WriteLine("1b:"+Day1b());
@@ -9,7 +11,90 @@ using Humanizer;
 //Console.WriteLine("3a:"+Day3a());
 //Console.WriteLine("3b:"+Day3b());
 //Console.WriteLine("4a:"+Day4a());
-Console.WriteLine("4b:"+Day4b());
+//Console.WriteLine("4b:"+Day4b());
+//Console.WriteLine("5a:"+Day5a());
+Console.WriteLine("5b:"+Day5b());
+
+
+long Day5a()
+{
+    var ls=File.ReadAllLines(Path.Combine(GetInputPath(),"day5.txt"));
+    var toMap= ls[0].Split(new []{':', ' '}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Skip(1).Select(long.Parse).ToDictionary(s=>s, s=>s); 
+    List<long> changedKeys=[];     
+    foreach(var l in ls)
+    {
+        if(l.Length==0)
+            continue;
+
+        if(char.IsDigit(l[0]))
+        {
+            var parts=l.Split(' ',StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(long.Parse).ToArray();            
+            foreach(var map in toMap.Where(kvp=> !changedKeys.Contains(kvp.Key) && kvp.Value >= parts[1] && kvp.Value < parts[1]+parts[2]))
+            {
+                toMap[map.Key]=parts[0]+(map.Value-parts[1]);
+                changedKeys.Add(map.Key);
+            }
+                
+        }
+        else
+        {
+           changedKeys.Clear();
+        }
+    }
+    return toMap.Min(kvp=>kvp.Value);    
+}
+
+long Day5b()
+{
+    var ls=File.ReadAllLines(Path.Combine(GetInputPath(),"day5.txt"));
+    var ranges= ls[0].Split(new []{':', ' '}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Skip(1).Select(long.Parse).Buffer(2).Select(b=>new TimeRange(DateTime.UnixEpoch.AddSeconds(b[0]), TimeSpan.FromSeconds(b[1])))
+                    .ToList(); 
+    List<TimeRange> newRanges=[];    
+    DateTime minDateTime=DateTime.MaxValue; 
+    foreach(var l in ls)
+    {
+        if(l.Length==0)
+            continue;
+
+        if(char.IsDigit(l[0]))
+        {
+            var parts=l.Split(' ',StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(long.Parse).ToArray();            
+            TimeRange str = new TimeRange(DateTime.UnixEpoch.AddSeconds(parts[1]), TimeSpan.FromSeconds(parts[2])); 
+            TimeRange dtr = new TimeRange(DateTime.UnixEpoch.AddSeconds(parts[0]), TimeSpan.FromSeconds(parts[2]));              
+            List<TimeRange> toAdd = [];
+            List<TimeRange> toRemove=[];
+            foreach(var match in ranges.Where(r=>r.IntersectsWith(str)))
+            {
+               var iRange=match.GetIntersection(str);
+               TimeRange mapped=new TimeRange(dtr.Start+(iRange.Start-str.Start), iRange.Duration);
+               newRanges.Add(mapped);
+               if(mapped.Start<minDateTime)
+                minDateTime = mapped.Start;
+               toRemove.Add(match);
+               TimePeriodSubtractor<TimeRange> subtractor = new TimePeriodSubtractor<TimeRange>();
+               ITimePeriodCollection subtractedPeriods =
+                    subtractor.SubtractPeriods( new TimePeriodCollection{match}, new TimePeriodCollection{str} );
+               toAdd.AddRange(subtractedPeriods.OfType<TimeRange>());              
+            }
+            toRemove.ForEach(tr=>ranges.Remove(tr));
+            ranges.AddRange(toAdd);
+        }
+        else if(newRanges.Any())
+        {
+           ranges=ranges.Concat(newRanges).ToList();
+           newRanges = [];
+           minDateTime=DateTime.MaxValue;
+        }
+    }
+    DateTime mr=ranges.Min(r=>r.Start);
+    if(mr < minDateTime)
+        minDateTime = mr;
+    return (long)(minDateTime-DateTime.UnixEpoch).TotalSeconds; 
+}
 
 static int Day4a()=> File.ReadAllLines(Path.Combine(GetInputPath(),"day4.txt"))
         .Select(l=>l.Split(new []{':', '|'}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
