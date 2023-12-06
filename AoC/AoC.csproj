@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Humanizer" Version="2.14.1" />
+    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     <PackageReference Include="System.Interactive" Version="6.0.1" />
     <PackageReference Include="TimePeriodLibrary.NET" Version="2.1.5" />
   </ItemGroup>

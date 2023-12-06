@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text.RegularExpressions;
 using Humanizer;
 using Itenso.TimePeriod;
+using MathNet.Numerics;
 
 //Console.WriteLine("1a:"+Day1a());
 //Console.WriteLine("1b:"+Day1b());
@@ -13,7 +14,50 @@ using Itenso.TimePeriod;
 //Console.WriteLine("4a:"+Day4a());
 //Console.WriteLine("4b:"+Day4b());
 //Console.WriteLine("5a:"+Day5a());
-Console.WriteLine("5b:"+Day5b());
+//Console.WriteLine("5b:"+Day5b());
+//Console.WriteLine("6a:"+Day6a());
+Console.WriteLine("6b:"+Day6b());
+
+long Day6a()
+{
+    var lines=File.ReadAllLines(Path.Combine(GetInputPath(),"day6.txt"))
+            .Select(l=>l
+                    .Split(new []{':', ' '}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Skip(1)
+                    .Select(int.Parse)
+                    .ToArray()
+                    )
+            .ToArray();
+    long result=1;
+    for(int i=0; i<lines[0].Length; i++)
+    {
+        var roots=FindRoots.Quadratic(lines[1][i],-lines[0][i],1);
+        var r1=Math.Min(roots.Item1.Real, roots.Item2.Real);
+        var r2=Math.Max(roots.Item1.Real, roots.Item2.Real);
+
+        var ir1=(int)Math.Ceiling(r1);
+        var ir2=(int)Math.Floor(r2);
+        result*= ir2 - ir1 + 1;
+    }    
+    return result;
+}
+
+int Day6b()
+{
+    var racedat=File.ReadAllLines(Path.Combine(GetInputPath(),"day6.txt"))
+            .Select(l=>l.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Skip(1)                    
+                    .Last())
+            .Select(l=>long.Parse(l.Replace(" ",string.Empty)))
+            .ToArray();
+    var roots=FindRoots.Quadratic(racedat[1],-racedat[0],1);
+    var r1=Math.Min(roots.Item1.Real, roots.Item2.Real);
+    var r2=Math.Max(roots.Item1.Real, roots.Item2.Real);
+
+    var ir1=(int)Math.Ceiling(r1);
+    var ir2=(int)Math.Floor(r2);
+    return ir2 - ir1 + 1;    
+}
 
 
 long Day5a()
