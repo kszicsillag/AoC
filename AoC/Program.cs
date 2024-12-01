@@ -18,7 +18,7 @@ static int Day1b()
     var ordered2sets=File.ReadLines(@"input/day1.txt").Select(l=>l.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                                      .SelectMany(la=>new []{(int.Parse(la[0]),0),(int.Parse(la[1]),1)})
                                      .GroupBy(x=>x.Item2)
-                                     .Select(g=>g.OrderBy(x=>x.Item1).Select(x=>x.Item1).ToArray())
+                                     .Select(g=>g.Select(x=>x.Item1).ToArray())
                                      .ToArray();    
 
     var histoLookup= ordered2sets[1].GroupBy(i=>i).ToDictionary(g=>g.Key,g=>g.Count());
