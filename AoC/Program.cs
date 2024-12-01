@@ -1,14 +1,2 @@
-﻿
-Console.WriteLine("1a:"+Day1a());
-
-
-static int Day1a()
-{
-    
-}
-    
-static int? Day1b()
-{
-    
-}
-    
+﻿// See https://aka.ms/new-console-template for more information
+Console.WriteLine("Hello, World!");
