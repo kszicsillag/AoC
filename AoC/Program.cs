@@ -1,18 +1,41 @@
-﻿//Console.WriteLine(nameof(Day1a)+":"+Day1a());
+﻿using System.Collections;
+using System.Linq;
+using System.Text.RegularExpressions;
+//Console.WriteLine(nameof(Day1a)+":"+Day1a());
 //Console.WriteLine(nameof(Day1b)+":"+Day1b());
 //Console.WriteLine(nameof(Day2a)+":"+Day2a());
-Console.WriteLine(nameof(Day2b)+":"+Day2b());
+//Console.WriteLine(nameof(Day2b)+":"+Day2b());
 
-static int Day2a()
+Console.WriteLine(nameof(Day3a)+":"+Day3a());
+Console.WriteLine(nameof(Day3b)+":"+Day3b());
+
+
+
+static int Day3a()
 {
-    return File.ReadLines(@"input/day2.txt")
-        .Select(l=>l.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        .Select(ll=>ll.Select(int.Parse))
-        .Select(ll=>ll.Buffer(2,1).Where(il=>il.Count() == 2).Select(il=>new {Element=il.ElementAt(0), Next= il.ElementAt(1)}).ToArray())
-        .Count(b=>b[0].Element < b[0].Next ? b.All(e=>e.Element < e.Next && Math.Abs(e.Element-e.Next) < 4) : b.All(e=>e.Element > e.Next && Math.Abs(e.Element-e.Next) < 4) )
-        ;
+   var input=File.ReadAllText(@"input/day3.txt");
+   return AoC.Utils.Day3aRegex().Matches(input).Sum(m=>int.Parse(m.Groups[1].Value)*int.Parse(m.Groups[2].Value));
+}
+
+static int Day3b()
+{
+   var input=File.ReadAllText(@"input/day3.txt");
+   var control= new SortedSet<(string value, int index)>(AoC.Utils.Day3bRegex().Matches(input).Select(m=>m.Groups.Cast<Group>().First(g=>g.Success))
+                                     .Select(g=>(g.Value, g.Index))
+                                    , Comparer<(string, int)>.Create((g1, g2)=> g1.Item2.CompareTo(g2.Item2)));
+   return AoC.Utils.Day3aRegex().Matches(input)
+   .Select(m=>new {m, MaxControl=control.GetViewBetween((string.Empty,0),(string.Empty,m.Index)).LastOrDefault()})
+   .Where(x=>x.MaxControl == default || x.MaxControl.value == "do()")
+   .Sum(x=>int.Parse(x.m.Groups[1].Value)*int.Parse(x.m.Groups[2].Value));
 
 }
+
+
+static int Day2a() => File.ReadLines(@"input/day2.txt")
+        .Select(l => l.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        .Select(ll => ll.Select(int.Parse))
+        .Select(ll => ll.Buffer(2, 1).Where(il => il.Count() == 2).Select(il => new { Element = il.ElementAt(0), Next = il.ElementAt(1) }).ToArray())
+        .Count(b => b[0].Element < b[0].Next ? b.All(e => e.Element < e.Next && Math.Abs(e.Element - e.Next) < 4) : b.All(e => e.Element > e.Next && Math.Abs(e.Element - e.Next) < 4));
 
 static int Day2b()
 {
