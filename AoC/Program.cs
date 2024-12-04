@@ -5,10 +5,44 @@ using System.Text.RegularExpressions;
 //Console.WriteLine(nameof(Day1b)+":"+Day1b());
 //Console.WriteLine(nameof(Day2a)+":"+Day2a());
 //Console.WriteLine(nameof(Day2b)+":"+Day2b());
+//Console.WriteLine(nameof(Day3a)+":"+Day3a());
+//Console.WriteLine(nameof(Day3b)+":"+Day3b());
 
-Console.WriteLine(nameof(Day3a)+":"+Day3a());
-Console.WriteLine(nameof(Day3b)+":"+Day3b());
+//Console.WriteLine(nameof(Day4a)+":"+Day4a());
+Console.WriteLine(nameof(Day4b)+":"+Day4b());
 
+
+
+static int Day4a()
+{
+   var input=File.ReadAllLines(@"input/day4.txt").SelectMany((l, ridx)=>l.ToArray().Select((c,cidx)=>new {c,ridx,cidx})).ToArray();
+   var h = input.GroupBy(x=>x.ridx).Select(g=>new string(g.OrderBy(gx=>gx.cidx).Select(gx=>gx.c).ToArray()));
+   var v = input.GroupBy(x=>x.cidx).Select(g=>new string(g.OrderBy(gx=>gx.ridx).Select(gx=>gx.c).ToArray()));
+   var d = input.GroupBy(x=>x.cidx-x.ridx).Select(g=>new string(g.OrderBy(gx=>gx.cidx).Select(gx=>gx.c).ToArray()));
+   var ad = input.GroupBy(x=>x.cidx+x.ridx).Select(g=>new string(g.OrderBy(gx=>gx.ridx).Select(gx=>gx.c).ToArray()));
+   return h.Concat(v).Concat(d).Concat(ad).Sum(s=>AoC.Utils.Day4a1Regex().Matches(s).Count+AoC.Utils.Day4a2Regex().Matches(s).Count);
+   // return 0;
+}
+
+static int Day4b()
+{
+   var input=File.ReadAllLines(@"input/day4.txt").Select(l=>l.ToArray()).ToArray();
+   int cnt=0;
+   for(int x=1; x<input.Length-1;x++)
+    for(int y=1; y<input[x].Length-1;y++)
+    {
+        if(input[x][y]=='A')
+        {
+            if((input[x-1][y-1]=='M' && input[x+1][y+1]=='S' && input[x+1][y-1]=='M' && input[x-1][y+1]=='S') //MSMS
+                || (input[x-1][y-1]=='S' && input[x+1][y+1]=='M' && input[x+1][y-1]=='M' && input[x-1][y+1]=='S') //SMMS
+                || (input[x-1][y-1]=='S' && input[x+1][y+1]=='M' && input[x+1][y-1]=='S' && input[x-1][y+1]=='M') //SMSM
+                || (input[x-1][y-1]=='M' && input[x+1][y+1]=='S' && input[x+1][y-1]=='S' && input[x-1][y+1]=='M') //MSSM
+              )
+              cnt++;
+        }        
+    }    
+    return cnt;
+}
 
 
 static int Day3a()
